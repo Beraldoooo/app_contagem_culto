@@ -25,12 +25,20 @@ export default async function Home() {
       </header>
 
       {podeLancar(perfil) ? (
-        <Link
-          href="/lancamento"
-          className="flex h-12 items-center justify-center rounded-xl bg-blue-600 px-4 text-base font-medium text-white transition hover:bg-blue-700"
-        >
-          Novo lançamento
-        </Link>
+        <div className="flex flex-col gap-2">
+          <Link
+            href="/lancamento"
+            className="flex h-12 items-center justify-center rounded-xl bg-blue-600 px-4 text-base font-medium text-white transition hover:bg-blue-700"
+          >
+            Novo lançamento
+          </Link>
+          <Link
+            href="/evento-especial"
+            className="flex h-12 items-center justify-center rounded-xl border border-slate-300 px-4 text-base font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+          >
+            Novo evento especial
+          </Link>
+        </div>
       ) : null}
 
       <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">

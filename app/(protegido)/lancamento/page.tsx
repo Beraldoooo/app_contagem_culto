@@ -114,9 +114,14 @@ async function Horarios({ data }: { data: string }) {
           </p>
           <p className="mt-2 text-slate-600 dark:text-slate-400">
             Os horários fixos são domingo (8h, 10h e 18h) e quinta-feira (20h).
-            Para uma data fora da rotina, será preciso cadastrar um evento
-            especial — ainda não implementado.
+            Para uma data fora da rotina, cadastre um evento especial.
           </p>
+          <Link
+            href={`/evento-especial?data=${data}`}
+            className="mt-3 flex h-11 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+          >
+            Criar evento especial nesta data
+          </Link>
         </div>
       </section>
     );
@@ -142,11 +147,16 @@ async function Horarios({ data }: { data: string }) {
               key={evento.id}
               className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
             >
-              <div className="flex flex-col gap-0.5">
-                <span className="text-base font-medium">
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <span className="flex items-center gap-2 text-base font-medium">
                   {formatarHorario(evento.horario)}
+                  {evento.tipo === "evento_especial" ? (
+                    <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800 dark:bg-violet-950/60 dark:text-violet-300">
+                      Evento
+                    </span>
+                  ) : null}
                 </span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">
+                <span className="truncate text-xs text-slate-500 dark:text-slate-400">
                   {evento.nome}
                 </span>
               </div>
@@ -164,6 +174,13 @@ async function Horarios({ data }: { data: string }) {
           );
         })}
       </ul>
+
+      <Link
+        href={`/evento-especial?data=${data}`}
+        className="flex h-11 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+      >
+        + Evento especial nesta data
+      </Link>
 
       <p className="text-xs text-slate-500 dark:text-slate-500">
         Digitar o número de cada horário é a próxima etapa.

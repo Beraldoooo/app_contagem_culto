@@ -48,6 +48,7 @@ app/                  rotas (App Router)
   (protegido)/        telas internas; o layout barra pendente/banido
     admin/usuarios/   painel de gestão de usuários (só admin_geral)
     lancamento/       escolha da data e geração dos cultos fixos
+    evento-especial/  cadastro de evento avulso, com vários horários
   aguardando/         "sua conta aguarda aprovação"
   acesso-negado/      conta banida — encerra a sessão ao abrir
   link-invalido/      link de e-mail expirado, incompleto ou de outro aparelho
@@ -111,7 +112,7 @@ Os cultos fixos **não** viram linhas em `eventos` de antemão: a função
 | `/auth/confirm`, `/link-invalido` | público — é aqui que a sessão nasce, vinda do e-mail |
 | `/aguardando` | logado, status `pendente` |
 | `/acesso-negado` | pública — a tela encerra a sessão do usuário banido |
-| `/lancamento` | logado, aprovado **e** `contador` ou `admin_geral` |
+| `/lancamento`, `/evento-especial` | logado, aprovado **e** `contador` ou `admin_geral` |
 | `/admin/usuarios` | logado, aprovado **e** `admin_geral` |
 | todo o resto | logado **e** status `aprovado` |
 
@@ -162,8 +163,9 @@ Para pular tudo isso durante os testes, desligue a confirmação em
 3. Rodar o schema no seu projeto Supabase e gerar os tipos:
    `npx supabase gen types typescript --project-id <id> > types/database.ts`.
 4. ~~Painel do admin para aprovar, promover e banir~~ — feito (`/admin/usuarios`).
-5. Lançamento: ~~escolha da data e geração dos cultos fixos~~ — feito.
-   Falta digitar a quantidade de cada horário, a soma do dia e os eventos
-   especiais.
-6. Histórico e comparativo (número e gráfico).
+5. Lançamento: ~~escolha da data, cultos fixos e eventos especiais~~ — feito.
+   Falta digitar a quantidade de cada horário e a soma do dia.
+6. Histórico e comparativo (número e gráfico). Ao comparar a frequência
+   regular, filtre `tipo = 'culto_fixo'` — é o que mantém os eventos
+   especiais fora da conta.
 7. Recuperação de senha ("esqueci minha senha") antes de ir a produção.
