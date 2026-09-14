@@ -57,7 +57,11 @@ for (const [rotulo, caminho] of leituras) {
   const r = await fetch(`${U}/rest/v1/${caminho}`, { headers: H });
   const corpo = await r.json();
   const n = Array.isArray(corpo) ? corpo.length : 0;
-  r.ok && n > 0 ? bom(`${rotulo.padEnd(34)} ${n} linhas`) : ruim(rotulo, `status ${r.status} ${JSON.stringify(corpo).slice(0,80)}`);
+  if (r.ok && n > 0) {
+    bom(`${rotulo.padEnd(34)} ${n} linhas`);
+  } else {
+    ruim(rotulo, `status ${r.status} ${JSON.stringify(corpo).slice(0, 80)}`);
+  }
 }
 
 console.log("\n=== ESCRITA — tudo deve ser bloqueado ===");
@@ -76,25 +80,42 @@ const escritas = [
 for (const [rotulo, metodo, caminho, corpo] of escritas) {
   const r = await fetch(`${U}/rest/v1/${caminho}`, { method: metodo, headers: HW, ...(corpo ? { body: JSON.stringify(corpo) } : {}) });
   let dados = null; try { dados = await r.json(); } catch {}
-  bloqueado(r, dados)
-    ? bom(`${rotulo.padEnd(24)} bloqueado`, `(${r.status}${Array.isArray(dados) && !dados.length ? ", 0 linhas" : ""})`)
-    : ruim(`${rotulo.padEnd(24)} PASSOU!`, `${r.status} ${JSON.stringify(dados).slice(0,90)}`);
+  if (bloqueado(r, dados)) {
+    const detalhe = Array.isArray(dados) && !dados.length ? ", 0 linhas" : "";
+    bom(`${rotulo.padEnd(24)} bloqueado`, `(${r.status}${detalhe})`);
+  } else {
+    ruim(`${rotulo.padEnd(24)} PASSOU!`, `${r.status} ${JSON.stringify(dados).slice(0, 90)}`);
+  }
 }
 
 console.log("\n=== FUNÇÃO DO BANCO ===");
 const r = await fetch(`${U}/rest/v1/rpc/gerar_eventos_fixos`, { method: "POST", headers: HW, body: JSON.stringify({ p_data: "2026-09-20" }) });
 const corpo = await r.json();
-bloqueado(r, corpo) ? bom("gerar_eventos_fixos bloqueado", `(${r.status})`) : ruim("gerar_eventos_fixos PASSOU!", JSON.stringify(corpo).slice(0,90));
+if (bloqueado(r, corpo)) {
+  bom("gerar_eventos_fixos bloqueado", `(${r.status})`);
+} else {
+  ruim("gerar_eventos_fixos PASSOU!", JSON.stringify(corpo).slice(0, 90));
+}
 
 console.log("\n=== NADA FOI ALTERADO? ===");
 const depois = await (await fetch(`${U}/rest/v1/contagens?select=id,quantidade&id=eq.${alvoContagem?.id}`, { headers: H })).json();
-depois[0]?.quantidade === alvoContagem?.quantidade
-  ? bom(`contagem intacta (${alvoContagem?.quantidade})`)
-  : ruim("contagem foi alterada!", JSON.stringify(depois));
+if (depois[0]?.quantidade === alvoContagem?.quantidade) {
+  bom(`contagem intacta (${alvoContagem?.quantidade})`);
+} else {
+  ruim("contagem foi alterada!", JSON.stringify(depois));
+}
 const evDepois = await (await fetch(`${U}/rest/v1/eventos?select=id,nome&id=eq.${alvoEvento.id}`, { headers: H })).json();
-evDepois[0]?.nome ? bom(`evento intacto ("${evDepois[0].nome}")`) : ruim("evento sumiu!");
+if (evDepois[0]?.nome) {
+  bom(`evento intacto ("${evDepois[0].nome}")`);
+} else {
+  ruim("evento sumiu!");
+}
 const perfilDepois = (await (await fetch(`${U}/rest/v1/profiles?select=role`, { headers: H })).json())[0];
-perfilDepois.role === "visualizador" ? bom("papel continua visualizador") : ruim(`papel virou ${perfilDepois.role}!`);
+if (perfilDepois.role === "visualizador") {
+  bom("papel continua visualizador");
+} else {
+  ruim(`papel virou ${perfilDepois.role}!`);
+}
 
 console.log(`\n${ok} passaram, ${falhou} falharam`);
 process.exit(falhou ? 1 : 0);
