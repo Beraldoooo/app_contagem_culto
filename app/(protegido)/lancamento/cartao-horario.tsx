@@ -47,10 +47,12 @@ function Cabecalho({ horario }: { horario: HorarioDoDia }) {
   );
 }
 
-function Selo({ jaLancado }: { jaLancado: boolean }) {
-  return jaLancado ? (
-    <span className="shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-      ✓ lançado
+function Selo({ quantidade }: { quantidade: number | null }) {
+  // Mostra o número que está NO BANCO. O campo abaixo é o que a pessoa está
+  // digitando; se outro aparelho lançar este horário, o selo entrega a verdade.
+  return quantidade !== null ? (
+    <span className="shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium tabular-nums text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+      ✓ {quantidade}
     </span>
   ) : (
     <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-900 dark:bg-amber-950/60 dark:text-amber-300">
@@ -100,7 +102,7 @@ export function CartaoHorario({
             </span>
           </span>
         ) : (
-          <Selo jaLancado={false} />
+          <Selo quantidade={null} />
         )}
       </li>
     );
@@ -112,7 +114,7 @@ export function CartaoHorario({
     >
       <div className="flex items-start justify-between gap-3">
         <Cabecalho horario={horario} />
-        <Selo jaLancado={jaLancado} />
+        <Selo quantidade={horario.quantidade} />
       </div>
 
       <form action={enviar} className="flex flex-col gap-2">
