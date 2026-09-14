@@ -334,13 +334,23 @@ apagar histórico não é.
 
 1. ~~Modelar o banco com RLS~~ — feito (`supabase/schema.sql`).
 2. ~~Autenticação, cadastro e aprovação~~ — feito.
-3. Rodar o schema no seu projeto Supabase e gerar os tipos:
-   `npx supabase gen types typescript --project-id <id> > types/database.ts`.
-4. ~~Painel do admin para aprovar, promover e banir~~ — feito (`/admin/usuarios`).
-5. ~~Lançamento: data, cultos fixos, eventos especiais e a contagem de cada
-   horário~~ — feito. Falta a soma do dia.
-6. ~~Histórico com filtros e paginação~~ — feito.
-7. ~~Comparativo numérico e gráfico de tendência~~ — feito. Tanto o
+3. ~~Painel do admin para aprovar, promover e banir~~ — feito (`/admin/usuarios`).
+4. ~~Lançamento: data, cultos fixos, eventos especiais, contagem por horário e
+   soma do dia~~ — feito.
+5. ~~Histórico com filtros e paginação~~ — feito.
+6. ~~Comparativo numérico e gráfico de tendência~~ — feito. Tanto o
    comparativo quanto a linha do gráfico usam apenas `culto_fixo`; eventos
    especiais entram no gráfico como marcadores separados e opcionais.
-8. Recuperação de senha ("esqueci minha senha") antes de ir a produção.
+
+A especificação do `CLAUDE.md` está coberta. Antes do uso real, falta:
+
+7. **Limpar os dados de teste** do banco — hoje há 86 horários e 82 contagens
+   fictícias, criados durante a construção.
+8. **Recuperação de senha** ("esqueci minha senha") — não existe; hoje a saída
+   é um `update` manual no SQL Editor.
+9. **Publicar** na Vercel (ver [Deploy](#deploy-na-vercel)) — o app só roda no
+   computador de quem desenvolve.
+10. Revisar detalhes de domínio e o acabamento visual.
+
+Fase 2 do escopo original (envio automático do resumo para o WhatsApp) segue
+adiada, como previsto desde o início.
