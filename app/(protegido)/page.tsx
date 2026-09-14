@@ -41,6 +41,12 @@ export default async function Home() {
           </Link>
         ) : null}
         <Link
+          href="/tendencia"
+          className="flex h-12 items-center justify-center rounded-xl border border-slate-300 px-4 text-base font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+        >
+          Tendência
+        </Link>
+        <Link
           href="/historico"
           className="flex h-12 items-center justify-center rounded-xl border border-slate-300 px-4 text-base font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
         >

@@ -125,7 +125,16 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "contagens_evento_id_fkey";
+            columns: ["evento_id"];
+            // UNIQUE(evento_id): o embed devolve objeto, não lista
+            isOneToOne: true;
+            referencedRelation: "eventos";
+            referencedColumns: ["id"];
+          },
+        ];
       };
     };
     Views: {

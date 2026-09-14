@@ -69,3 +69,8 @@ export function formatarHorario(horario: string): string {
   const hora = Number(h);
   return Number(m) === 0 ? `${hora}h` : `${hora}h${m}`;
 }
+
+/** "domingo 10h" -> "Domingo 10h" — só a primeira letra. */
+export function comInicialMaiuscula(texto: string): string {
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}

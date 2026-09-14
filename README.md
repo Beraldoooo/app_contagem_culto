@@ -11,6 +11,7 @@ cultos e eventos da igreja. A especificação completa está em [CLAUDE.md](./CL
 - **Next.js 16** (App Router) + **TypeScript**
 - **Tailwind CSS v4**
 - **Supabase** (`@supabase/supabase-js` + `@supabase/ssr`)
+- **Recharts** para o gráfico de tendência
 - **PWA**: manifest, ícones e service worker próprios (sem dependências extras)
 
 ## Como rodar
@@ -50,6 +51,7 @@ app/                  rotas (App Router)
     lancamento/       escolha da data, cards por horário e lançamento
     evento-especial/  cadastro de evento avulso, com vários horários
     historico/        datas registradas, com filtros e paginação
+    tendencia/        gráfico de linha da frequência, por horário ou total
   aguardando/         "sua conta aguarda aprovação"
   acesso-negado/      conta banida — encerra a sessão ao abrir
   link-invalido/      link de e-mail expirado, incompleto ou de outro aparelho
@@ -170,7 +172,7 @@ Para pular tudo isso durante os testes, desligue a confirmação em
 5. ~~Lançamento: data, cultos fixos, eventos especiais e a contagem de cada
    horário~~ — feito. Falta a soma do dia.
 6. ~~Histórico com filtros e paginação~~ — feito.
-7. ~~Comparativo numérico no dashboard~~ — feito, usando `total_cultos` da
-   view `totais_por_data`, que mantém os eventos especiais fora da conta.
-   Falta o gráfico de tendência ao longo do tempo.
+7. ~~Comparativo numérico e gráfico de tendência~~ — feito. Tanto o
+   comparativo quanto a linha do gráfico usam apenas `culto_fixo`; eventos
+   especiais entram no gráfico como marcadores separados e opcionais.
 8. Recuperação de senha ("esqueci minha senha") antes de ir a produção.
