@@ -1,7 +1,19 @@
 import type { NextConfig } from "next";
 
+/**
+ * Identificador desta build, usado para versionar o cache do service worker.
+ *
+ * Na Vercel usa o hash do commit; fora dela, o instante da build. O
+ * next.config é avaliado uma vez por build, então o valor muda a cada
+ * publicação — que é o gatilho para o service worker limpar o cache antigo.
+ */
+const BUILD_ID =
+  process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 8) ?? String(Date.now());
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  env: {
+    NEXT_PUBLIC_BUILD_ID: BUILD_ID,
+  },
 };
 
 export default nextConfig;

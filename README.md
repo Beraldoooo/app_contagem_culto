@@ -94,6 +94,23 @@ Para manter ligada, veja [Confirmação de e-mail](#confirmação-de-e-mail-1)
 mais abaixo — exige ajustar a Site URL e, para funcionar entre aparelhos, um
 SMTP próprio.
 
+### Atualizações depois de publicado
+
+Não há loja de aplicativos: `git push` → a Vercel publica → todo mundo está
+atualizado, tanto quem abre pelo navegador quanto quem instalou na tela
+inicial. Quem estiver com o app aberto no instante da publicação continua na
+versão antiga até navegar ou reabrir.
+
+O service worker versiona o cache pelo identificador da build
+(`NEXT_PUBLIC_BUILD_ID`, gerado em `next.config.ts` a partir do commit na
+Vercel). Como o nome dos caches muda a cada publicação, o `activate` apaga os
+antigos em vez de acumular arquivos velhos no aparelho. Para conferir essa
+lógica sem precisar de navegador:
+
+```bash
+node scripts/teste-service-worker.mjs
+```
+
 ### Testar o comportamento de PWA
 
 O service worker é registrado **apenas em produção** (em dev ele atrapalharia o

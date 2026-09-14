@@ -5,7 +5,12 @@
  * rede com uma página offline. Sem cache de dados — isso entra junto com a
  * lógica de negócio.
  */
-const VERSION = "v1";
+// Vem da URL com que o service worker foi registrado (/sw.js?v=...). A cada
+// publicação o valor muda, os nomes dos caches mudam junto, e o activate abaixo
+// apaga tudo que não tem o nome novo — em vez de acumular arquivos velhos para
+// sempre no celular.
+const VERSION =
+  new URL(self.location.href).searchParams.get("v") ?? "dev";
 const APP_SHELL_CACHE = `contagem-culto-shell-${VERSION}`;
 const RUNTIME_CACHE = `contagem-culto-runtime-${VERSION}`;
 const OFFLINE_URL = "/offline";

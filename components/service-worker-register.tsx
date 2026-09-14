@@ -14,8 +14,12 @@ export function ServiceWorkerRegister() {
     if (!("serviceWorker" in navigator)) return;
 
     const register = () => {
+      // A versão vai na URL: quando ela muda, o navegador entende que é outro
+      // service worker, instala o novo e o activate apaga os caches antigos.
+      const versao = process.env.NEXT_PUBLIC_BUILD_ID ?? "dev";
+
       navigator.serviceWorker
-        .register("/sw.js", { scope: "/", updateViaCache: "none" })
+        .register(`/sw.js?v=${versao}`, { scope: "/", updateViaCache: "none" })
         .catch((error) => {
           console.error("Falha ao registrar o service worker:", error);
         });
