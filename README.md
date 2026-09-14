@@ -80,6 +80,7 @@ public/
 supabase/
   schema.sql          tabelas, enums, triggers, RLS e seed — rodar no SQL Editor
   totais-por-data.sql view que soma por data (já incluída no schema.sql)
+  auditoria/          scripts que conferem as permissões contra a API real
 proxy.ts              roda antes de cada request (era `middleware.ts` no Next 15)
 ```
 
@@ -121,6 +122,21 @@ Os cultos fixos **não** viram linhas em `eventos` de antemão: a função
 | `/evento-especial` | logado, aprovado **e** `contador` ou `admin_geral` |
 | `/admin/usuarios` | logado, aprovado **e** `admin_geral` |
 | todo o resto | logado **e** status `aprovado` |
+
+### Permissões do Visualizador
+
+Leitura completa do dashboard, histórico e gráficos; nenhuma escrita. O bloqueio
+não depende de esconder botões: as quatro Server Actions de escrita checam o
+papel no servidor, e a RLS recusa a operação mesmo que alguém fale direto com a
+API. Para conferir a qualquer momento, com a conta de teste como
+`visualizador`:
+
+```bash
+node supabase/auditoria/visualizador.mjs
+```
+
+São 9 leituras que precisam funcionar e 10 escritas que precisam falhar, mais a
+função `gerar_eventos_fixos` e a reconferência de que nada foi alterado.
 
 Quem não tem sessão é redirecionado para `/login?redirecionar=<destino>` pelo
 `proxy.ts`. O status do perfil é checado no layout de `(protegido)`, que já
