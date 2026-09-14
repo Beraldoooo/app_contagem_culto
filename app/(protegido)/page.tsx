@@ -39,6 +39,12 @@ export default async function Home() {
             Novo evento especial
           </Link>
         ) : null}
+        <Link
+          href="/historico"
+          className="flex h-12 items-center justify-center rounded-xl border border-slate-300 px-4 text-base font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+        >
+          Histórico
+        </Link>
       </div>
 
       <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">

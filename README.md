@@ -49,6 +49,7 @@ app/                  rotas (App Router)
     admin/usuarios/   painel de gestão de usuários (só admin_geral)
     lancamento/       escolha da data, cards por horário e lançamento
     evento-especial/  cadastro de evento avulso, com vários horários
+    historico/        datas registradas, com filtros e paginação
   aguardando/         "sua conta aguarda aprovação"
   acesso-negado/      conta banida — encerra a sessão ao abrir
   link-invalido/      link de e-mail expirado, incompleto ou de outro aparelho
@@ -75,6 +76,7 @@ public/
   icons/              ícones do manifest (192, 512 e maskable)
 supabase/
   schema.sql          tabelas, enums, triggers, RLS e seed — rodar no SQL Editor
+  totais-por-data.sql view que soma por data (já incluída no schema.sql)
 proxy.ts              roda antes de cada request (era `middleware.ts` no Next 15)
 ```
 
@@ -112,7 +114,7 @@ Os cultos fixos **não** viram linhas em `eventos` de antemão: a função
 | `/auth/confirm`, `/link-invalido` | público — é aqui que a sessão nasce, vinda do e-mail |
 | `/aguardando` | logado, status `pendente` |
 | `/acesso-negado` | pública — a tela encerra a sessão do usuário banido |
-| `/lancamento` | qualquer usuário aprovado; só `contador` e `admin_geral` editam |
+| `/lancamento`, `/historico` | qualquer usuário aprovado; só `contador` e `admin_geral` editam |
 | `/evento-especial` | logado, aprovado **e** `contador` ou `admin_geral` |
 | `/admin/usuarios` | logado, aprovado **e** `admin_geral` |
 | todo o resto | logado **e** status `aprovado` |
@@ -166,7 +168,8 @@ Para pular tudo isso durante os testes, desligue a confirmação em
 4. ~~Painel do admin para aprovar, promover e banir~~ — feito (`/admin/usuarios`).
 5. ~~Lançamento: data, cultos fixos, eventos especiais e a contagem de cada
    horário~~ — feito. Falta a soma do dia.
-6. Histórico e comparativo (número e gráfico). Ao comparar a frequência
-   regular, filtre `tipo = 'culto_fixo'` — é o que mantém os eventos
-   especiais fora da conta.
-7. Recuperação de senha ("esqueci minha senha") antes de ir a produção.
+6. ~~Histórico com filtros e paginação~~ — feito.
+7. Comparativo (número e gráfico). Ao comparar a frequência regular, use as
+   colunas `total_cultos` da view `totais_por_data` — é o que mantém os
+   eventos especiais fora da conta.
+8. Recuperação de senha ("esqueci minha senha") antes de ir a produção.

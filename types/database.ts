@@ -128,7 +128,25 @@ export type Database = {
         Relationships: [];
       };
     };
-    Views: Record<string, never>;
+    Views: {
+      totais_por_data: {
+        Row: {
+          data: string;
+          tem_culto_fixo: boolean;
+          tem_evento_especial: boolean;
+          horarios: number;
+          horarios_lancados: number;
+          total: number;
+          horarios_cultos: number;
+          lancados_cultos: number;
+          total_cultos: number;
+          horarios_eventos: number;
+          lancados_eventos: number;
+          total_eventos: number;
+        };
+        Relationships: [];
+      };
+    };
     Functions: {
       gerar_eventos_fixos: {
         Args: { p_data: string };
@@ -150,3 +168,4 @@ export type Database = {
 export type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 export type Evento = Database["public"]["Tables"]["eventos"]["Row"];
 export type Contagem = Database["public"]["Tables"]["contagens"]["Row"];
+export type TotalPorData = Database["public"]["Views"]["totais_por_data"]["Row"];

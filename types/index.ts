@@ -5,6 +5,7 @@ export type {
   EventoTipo,
   Json,
   Profile,
+  TotalPorData,
   UserRole,
   UserStatus,
 } from "./database";
