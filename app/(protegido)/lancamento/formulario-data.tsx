@@ -16,7 +16,7 @@ function Botao() {
       disabled={pending}
       className="h-11 rounded-lg bg-blue-600 px-4 text-base font-medium text-white transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60"
     >
-      {pending ? "Carregando…" : "Ver horários"}
+      {pending ? "Carregando…" : "Abrir data"}
     </button>
   );
 }

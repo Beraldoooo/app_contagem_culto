@@ -9,15 +9,15 @@ import {
   diaDaSemana,
   ehDataValida,
   formatarDataLonga,
-  formatarHorario,
   hojeISO,
 } from "@/lib/datas";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
+import { CartaoHorario, type HorarioDoDia } from "./cartao-horario";
 import { FormularioData } from "./formulario-data";
 
-export const metadata: Metadata = { title: "Novo lançamento" };
+export const metadata: Metadata = { title: "Contagem do dia" };
 
 export default async function LancamentoPage({
   searchParams,
@@ -27,9 +27,9 @@ export default async function LancamentoPage({
   const sessao = await obterSessaoAtual();
   if (!sessao) redirect("/login");
 
-  // Barreira de servidor: Visualizador não chega aqui nem digitando a URL.
-  // A RLS ainda barra a escrita, mesmo que alguém contorne esta checagem.
-  if (!podeLancar(sessao.perfil)) redirect("/");
+  // Visualizador entra, mas só lê. Quem edita é decidido aqui, repetido na
+  // Server Action e garantido pela RLS — a tela é a camada mais fraca das três.
+  const podeEditar = podeLancar(sessao.perfil);
 
   const hoje = hojeISO();
   const { data: dataParam } = await searchParams;
@@ -46,17 +46,19 @@ export default async function LancamentoPage({
           ← Voltar
         </Link>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">
-          Novo lançamento
+          {podeEditar ? "Contagem do dia" : "Contagens do dia"}
         </h1>
         <p className="text-sm text-slate-600 dark:text-slate-400">
-          Escolha a data do culto. Os horários aparecem automaticamente.
+          {podeEditar
+            ? "Escolha a data. Cada horário é lançado separadamente, quando o culto terminar."
+            : "Escolha a data para consultar as contagens já lançadas."}
         </p>
       </header>
 
       <FormularioData dataInicial={dataSelecionada ?? hoje} hoje={hoje} />
 
       {dataSelecionada ? (
-        <Horarios data={dataSelecionada} />
+        <Horarios data={dataSelecionada} podeEditar={podeEditar} />
       ) : (
         <ReferenciaHorarios />
       )}
@@ -64,7 +66,13 @@ export default async function LancamentoPage({
   );
 }
 
-async function Horarios({ data }: { data: string }) {
+async function Horarios({
+  data,
+  podeEditar,
+}: {
+  data: string;
+  podeEditar: boolean;
+}) {
   const supabase = await createClient();
 
   const { data: eventos, error } = await supabase
@@ -86,7 +94,6 @@ async function Horarios({ data }: { data: string }) {
 
   const lista = eventos ?? [];
 
-  // Contagens já lançadas, para a tela mostrar o que falta.
   const { data: contagens } = lista.length
     ? await supabase
         .from("contagens")
@@ -101,90 +108,92 @@ async function Horarios({ data }: { data: string }) {
     (contagens ?? []).map((c) => [c.evento_id, c.quantidade]),
   );
 
-  const diaSemana = DIAS_SEMANA[diaDaSemana(data)];
+  const horarios: HorarioDoDia[] = lista.map((evento) => ({
+    id: evento.id,
+    nome: evento.nome,
+    horario: evento.horario,
+    ehEvento: evento.tipo === "evento_especial",
+    quantidade: porEvento.get(evento.id) ?? null,
+  }));
 
-  if (lista.length === 0) {
-    return (
-      <section className="flex flex-col gap-3">
-        <h2 className="text-sm font-medium">{formatarDataLonga(data)}</h2>
-        <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
-          <p>
-            Não há culto fixo em{" "}
-            <strong className="font-medium">{diaSemana}</strong>.
-          </p>
-          <p className="mt-2 text-slate-600 dark:text-slate-400">
-            Os horários fixos são domingo (8h, 10h e 18h) e quinta-feira (20h).
-            Para uma data fora da rotina, cadastre um evento especial.
-          </p>
-          <Link
-            href={`/evento-especial?data=${data}`}
-            className="mt-3 flex h-11 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-          >
-            Criar evento especial nesta data
-          </Link>
-        </div>
-      </section>
-    );
+  if (horarios.length === 0) {
+    return <SemCultos data={data} podeEditar={podeEditar} />;
   }
+
+  const lancados = horarios.filter((h) => h.quantidade !== null).length;
+  const pendentes = horarios.length - lancados;
 
   return (
     <section className="flex flex-col gap-3">
       <div className="flex flex-col gap-0.5">
         <h2 className="text-sm font-medium">{formatarDataLonga(data)}</h2>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          {lista.length === 1
-            ? "1 culto nessa data"
-            : `${lista.length} cultos nessa data`}
+          {lancados} de {horarios.length}{" "}
+          {horarios.length === 1 ? "horário lançado" : "horários lançados"}
+          {pendentes > 0
+            ? ` · ${pendentes} ${pendentes === 1 ? "pendente" : "pendentes"}`
+            : " · dia completo"}
         </p>
       </div>
 
-      <ul className="flex flex-col gap-2">
-        {lista.map((evento) => {
-          const quantidade = porEvento.get(evento.id);
-
-          return (
-            <li
-              key={evento.id}
-              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
-            >
-              <div className="flex min-w-0 flex-col gap-0.5">
-                <span className="flex items-center gap-2 text-base font-medium">
-                  {formatarHorario(evento.horario)}
-                  {evento.tipo === "evento_especial" ? (
-                    <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800 dark:bg-violet-950/60 dark:text-violet-300">
-                      Evento
-                    </span>
-                  ) : null}
-                </span>
-                <span className="truncate text-xs text-slate-500 dark:text-slate-400">
-                  {evento.nome}
-                </span>
-              </div>
-
-              {quantidade === undefined ? (
-                <span className="rounded-full bg-slate-200 px-2.5 py-1 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                  sem contagem
-                </span>
-              ) : (
-                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-                  {quantidade} pessoas
-                </span>
-              )}
-            </li>
-          );
-        })}
+      <ul className="flex flex-col gap-3">
+        {horarios.map((horario) => (
+          <CartaoHorario
+            key={horario.id}
+            horario={horario}
+            podeEditar={podeEditar}
+          />
+        ))}
       </ul>
 
-      <Link
-        href={`/evento-especial?data=${data}`}
-        className="flex h-11 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-      >
-        + Evento especial nesta data
-      </Link>
+      {podeEditar ? (
+        <Link
+          href={`/evento-especial?data=${data}`}
+          className="flex h-11 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+        >
+          + Evento especial nesta data
+        </Link>
+      ) : null}
 
       <p className="text-xs text-slate-500 dark:text-slate-500">
-        Digitar o número de cada horário é a próxima etapa.
+        A soma do dia e o comparativo com as datas anteriores são a próxima
+        etapa.
       </p>
+    </section>
+  );
+}
+
+function SemCultos({
+  data,
+  podeEditar,
+}: {
+  data: string;
+  podeEditar: boolean;
+}) {
+  const diaSemana = DIAS_SEMANA[diaDaSemana(data)];
+
+  return (
+    <section className="flex flex-col gap-3">
+      <h2 className="text-sm font-medium">{formatarDataLonga(data)}</h2>
+      <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
+        <p>
+          Não há culto fixo em <strong className="font-medium">{diaSemana}</strong>.
+        </p>
+        <p className="mt-2 text-slate-600 dark:text-slate-400">
+          Os horários fixos são domingo (8h, 10h e 18h) e quinta-feira (20h).
+          {podeEditar
+            ? " Para uma data fora da rotina, cadastre um evento especial."
+            : " Nenhum evento especial foi cadastrado nesta data."}
+        </p>
+        {podeEditar ? (
+          <Link
+            href={`/evento-especial?data=${data}`}
+            className="mt-3 flex h-11 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+          >
+            Criar evento especial nesta data
+          </Link>
+        ) : null}
+      </div>
     </section>
   );
 }

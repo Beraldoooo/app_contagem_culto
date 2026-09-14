@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { ehDataValida, hojeISO } from "@/lib/datas";
@@ -44,6 +45,75 @@ export async function prepararData(
     .eq("id", user.id)
     .maybeSingle();
 
+  const aprovado = perfil?.status === "aprovado";
+  if (!aprovado) return { erro: "Seu perfil não tem acesso." };
+
+  const podeLancar =
+    perfil.role === "contador" || perfil.role === "admin_geral";
+
+  // Visualizador só consulta: navega para a data sem criar nada. A RLS recusaria
+  // o INSERT de qualquer forma — aqui é para ele não levar um erro na cara ao
+  // simplesmente escolher um dia.
+  if (podeLancar) {
+    const { error } = await supabase.rpc("gerar_eventos_fixos", {
+      p_data: data,
+    });
+
+    if (error) {
+      return {
+        erro: "Não foi possível preparar os horários dessa data. Tente novamente.",
+      };
+    }
+  }
+
+  redirect(`/lancamento?data=${data}`);
+}
+
+const QUANTIDADE_MAXIMA = 100_000;
+
+export type EstadoContagem = {
+  erro?: string;
+  ok?: string;
+};
+
+/**
+ * Salva (ou corrige) a contagem de UM horário.
+ *
+ * `upsert` com onConflict em evento_id: como a tabela tem UNIQUE(evento_id),
+ * lançar de novo o mesmo horário corrige o número em vez de criar uma segunda
+ * linha — o que inflaria o total do dia.
+ */
+export async function salvarContagem(
+  _anterior: EstadoContagem,
+  formData: FormData,
+): Promise<EstadoContagem> {
+  const eventoId = String(formData.get("evento_id") ?? "");
+  const bruto = String(formData.get("quantidade") ?? "").trim();
+
+  if (!eventoId) return { erro: "Horário não informado." };
+  if (bruto === "") return { erro: "Digite quantas pessoas estavam presentes." };
+  if (!/^\d+$/.test(bruto)) {
+    return { erro: "Use apenas números inteiros, sem vírgula nem sinal." };
+  }
+
+  const quantidade = Number(bruto);
+  if (quantidade > QUANTIDADE_MAXIMA) {
+    return { erro: "Esse número parece alto demais. Confira o que digitou." };
+  }
+
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erro: "Sessão expirada. Entre novamente." };
+
+  const { data: perfil } = await supabase
+    .from("profiles")
+    .select("role, status")
+    .eq("id", user.id)
+    .maybeSingle();
+
   const podeLancar =
     perfil?.status === "aprovado" &&
     (perfil.role === "contador" || perfil.role === "admin_geral");
@@ -52,15 +122,17 @@ export async function prepararData(
     return { erro: "Seu perfil não pode lançar contagens." };
   }
 
-  const { error } = await supabase.rpc("gerar_eventos_fixos", {
-    p_data: data,
-  });
+  const { error } = await supabase.from("contagens").upsert(
+    { evento_id: eventoId, quantidade, lancado_por: user.id },
+    { onConflict: "evento_id" },
+  );
 
   if (error) {
-    return {
-      erro: "Não foi possível preparar os horários dessa data. Tente novamente.",
-    };
+    return { erro: "Não foi possível salvar. Tente novamente." };
   }
 
-  redirect(`/lancamento?data=${data}`);
+  revalidatePath("/lancamento");
+  return {
+    ok: quantidade === 1 ? "1 pessoa registrada." : `${quantidade} pessoas registradas.`,
+  };
 }
