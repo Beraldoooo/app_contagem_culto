@@ -60,6 +60,7 @@ app/                  rotas (App Router)
   apple-icon.png      ícone do iOS (apple-touch-icon)
 components/           componentes de UI compartilhados
 lib/datas.ts          dia da semana e formatação, sem depender de fuso
+lib/comparativo.ts    compara o culto com a mesma ocorrência da semana anterior
 lib/auth/
   acoes.ts            Server Actions: entrar, cadastrar, sair
   perfil.ts           sessão + perfil do usuário, helpers de papel
@@ -169,7 +170,7 @@ Para pular tudo isso durante os testes, desligue a confirmação em
 5. ~~Lançamento: data, cultos fixos, eventos especiais e a contagem de cada
    horário~~ — feito. Falta a soma do dia.
 6. ~~Histórico com filtros e paginação~~ — feito.
-7. Comparativo (número e gráfico). Ao comparar a frequência regular, use as
-   colunas `total_cultos` da view `totais_por_data` — é o que mantém os
-   eventos especiais fora da conta.
+7. ~~Comparativo numérico no dashboard~~ — feito, usando `total_cultos` da
+   view `totais_por_data`, que mantém os eventos especiais fora da conta.
+   Falta o gráfico de tendência ao longo do tempo.
 8. Recuperação de senha ("esqueci minha senha") antes de ir a produção.
