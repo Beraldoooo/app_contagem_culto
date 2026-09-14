@@ -1,4 +1,6 @@
 import { AvisoSupabase } from "@/components/aviso-supabase";
+import Link from "next/link";
+
 import { obterSessaoAtual, podeLancar, ROTULO_ROLE } from "@/lib/auth/perfil";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 
@@ -21,6 +23,15 @@ export default async function Home() {
           {perfil ? `Você entrou como ${ROTULO_ROLE[perfil.role]}.` : ""}
         </p>
       </header>
+
+      {podeLancar(perfil) ? (
+        <Link
+          href="/lancamento"
+          className="flex h-12 items-center justify-center rounded-xl bg-blue-600 px-4 text-base font-medium text-white transition hover:bg-blue-700"
+        >
+          Novo lançamento
+        </Link>
+      ) : null}
 
       <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
         <h2 className="text-sm font-medium">O que já funciona</h2>

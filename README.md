@@ -47,6 +47,7 @@ app/                  rotas (App Router)
   (auth)/             telas públicas: /login e /cadastro
   (protegido)/        telas internas; o layout barra pendente/banido
     admin/usuarios/   painel de gestão de usuários (só admin_geral)
+    lancamento/       escolha da data e geração dos cultos fixos
   aguardando/         "sua conta aguarda aprovação"
   acesso-negado/      conta banida — encerra a sessão ao abrir
   link-invalido/      link de e-mail expirado, incompleto ou de outro aparelho
@@ -56,6 +57,7 @@ app/                  rotas (App Router)
   icon.png            favicon / ícone da aba
   apple-icon.png      ícone do iOS (apple-touch-icon)
 components/           componentes de UI compartilhados
+lib/datas.ts          dia da semana e formatação, sem depender de fuso
 lib/auth/
   acoes.ts            Server Actions: entrar, cadastrar, sair
   perfil.ts           sessão + perfil do usuário, helpers de papel
@@ -109,6 +111,7 @@ Os cultos fixos **não** viram linhas em `eventos` de antemão: a função
 | `/auth/confirm`, `/link-invalido` | público — é aqui que a sessão nasce, vinda do e-mail |
 | `/aguardando` | logado, status `pendente` |
 | `/acesso-negado` | pública — a tela encerra a sessão do usuário banido |
+| `/lancamento` | logado, aprovado **e** `contador` ou `admin_geral` |
 | `/admin/usuarios` | logado, aprovado **e** `admin_geral` |
 | todo o resto | logado **e** status `aprovado` |
 
@@ -159,5 +162,8 @@ Para pular tudo isso durante os testes, desligue a confirmação em
 3. Rodar o schema no seu projeto Supabase e gerar os tipos:
    `npx supabase gen types typescript --project-id <id> > types/database.ts`.
 4. ~~Painel do admin para aprovar, promover e banir~~ — feito (`/admin/usuarios`).
-5. Telas de lançamento, histórico e comparativo.
-6. Recuperação de senha ("esqueci minha senha") antes de ir a produção.
+5. Lançamento: ~~escolha da data e geração dos cultos fixos~~ — feito.
+   Falta digitar a quantidade de cada horário, a soma do dia e os eventos
+   especiais.
+6. Histórico e comparativo (número e gráfico).
+7. Recuperação de senha ("esqueci minha senha") antes de ir a produção.
