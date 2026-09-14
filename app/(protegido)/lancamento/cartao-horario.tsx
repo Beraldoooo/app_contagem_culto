@@ -3,9 +3,14 @@
 import { useActionState, useId } from "react";
 import { useFormStatus } from "react-dom";
 
+import { AcaoConfirmada } from "@/components/acao-confirmada";
 import { formatarHorario } from "@/lib/datas";
 
-import { salvarContagem, type EstadoContagem } from "./acoes";
+import {
+  excluirContagem,
+  salvarContagem,
+  type EstadoContagem,
+} from "./acoes";
 
 export type HorarioDoDia = {
   id: string;
@@ -71,9 +76,12 @@ function Selo({ quantidade }: { quantidade: number | null }) {
 export function CartaoHorario({
   horario,
   podeEditar,
+  podeExcluir,
 }: {
   horario: HorarioDoDia;
   podeEditar: boolean;
+  /** Excluir é do Administrador Geral, como manda a RLS. */
+  podeExcluir: boolean;
 }) {
   const [estado, enviar] = useActionState<EstadoContagem, FormData>(
     salvarContagem,
@@ -150,6 +158,18 @@ export function CartaoHorario({
           </p>
         ) : null}
       </form>
+
+      {podeExcluir && jaLancado ? (
+        <AcaoConfirmada
+          acao={excluirContagem}
+          campos={{ evento_id: horario.id }}
+          rotulo="Excluir lançamento"
+          tom="perigo"
+          pergunta={`Excluir o lançamento das ${formatarHorario(horario.horario)}?`}
+          consequencia={`As ${horario.quantidade} pessoas somem do total do dia e o horário volta a ficar pendente. Para registrar que ninguém veio, salve 0 em vez de excluir.`}
+          rotuloConfirmar="Sim, excluir"
+        />
+      ) : null}
     </li>
   );
 }

@@ -62,7 +62,7 @@ export function Grafico({
   mostrarEventos: boolean;
 }) {
   return (
-    <div className="h-64 w-full">
+    <div className="h-64 w-full sm:h-80 lg:h-[26rem]">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart
           data={pontos}

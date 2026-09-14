@@ -27,6 +27,18 @@ function traduzirErro(mensagem: string): string {
     return "E-mail inválido.";
   if (m.includes("rate limit") || m.includes("too many"))
     return "Muitas tentativas seguidas. Espere um minuto e tente de novo.";
+  // Falha de rede não é erro de senha: dizer "tente novamente" faria a pessoa
+  // desconfiar do que digitou em vez de olhar para a conexão.
+  if (
+    m.includes("failed to fetch") ||
+    m.includes("network") ||
+    m.includes("fetch failed") ||
+    m.includes("timeout") ||
+    m.includes("enotfound") ||
+    m.includes("econnrefused")
+  ) {
+    return "Não conseguimos falar com o servidor. Verifique sua conexão e tente de novo.";
+  }
   return "Não foi possível concluir. Tente novamente.";
 }
 

@@ -14,17 +14,85 @@ cultos e eventos da igreja. A especificação completa está em [CLAUDE.md](./CL
 - **Recharts** para o gráfico de tendência
 - **PWA**: manifest, ícones e service worker próprios (sem dependências extras)
 
-## Como rodar
+## Setup completo, do zero
+
+São quatro passos. Do primeiro ao app rodando dá uns 15 minutos.
+
+### 1. Criar o projeto no Supabase
+
+1. Entre em [supabase.com](https://supabase.com) e crie um projeto
+2. Guarde a senha do banco que ele pedir (você não vai precisar dela aqui, mas
+   não dá para recuperar depois)
+3. Espere o projeto terminar de subir — leva 1 ou 2 minutos
+
+### 2. Criar as tabelas
+
+No painel do Supabase, **SQL Editor → New query**, cole o conteúdo de
+[`supabase/schema.sql`](./supabase/schema.sql) inteiro e clique em **Run**.
+
+Isso cria as tabelas, os tipos, os gatilhos, as políticas de segurança (RLS), a
+view de totais e os horários fixos padrão. O script é idempotente: rodar de
+novo não quebra nada nem duplica dados.
+
+> Se você já tinha rodado uma versão anterior do schema, rode também
+> [`supabase/totais-por-data.sql`](./supabase/totais-por-data.sql), que cria só
+> a view de totais.
+
+### 3. Conectar o app ao banco
+
+No Supabase, **Project Settings → API**, copie os dois valores:
+
+```bash
+cp .env.local.example .env.local
+```
+
+Abra o `.env.local` e preencha:
+
+| Variável | Onde achar |
+| --- | --- |
+| `NEXT_PUBLIC_SUPABASE_URL` | Project Settings → API → **Project URL** |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → API → **anon public** |
+
+A chave `anon` é pública por natureza — ela vai para o navegador. Quem protege
+os dados é a RLS, não o segredo da chave. Nunca use a `service_role` aqui.
+
+Depois:
 
 ```bash
 npm install
-cp .env.local.example .env.local   # preencha com as chaves do seu projeto Supabase
 npm run dev
 ```
 
-O app sobe em http://localhost:3000. O `.env.local` não é obrigatório para o
-esqueleto rodar — sem ele, a home apenas sinaliza que o Supabase ainda não foi
-configurado.
+O app sobe em http://localhost:3000. Sem `.env.local` ele não quebra: mostra uma
+tela explicando o que falta.
+
+### 4. Criar o primeiro Administrador Geral
+
+Todo cadastro nasce **pendente**, inclusive o seu — e só um Administrador Geral
+aprova alguém. Então o primeiro precisa ser promovido na mão, uma única vez:
+
+1. Cadastre-se em http://localhost:3000/cadastro
+2. No Supabase, **SQL Editor**, rode trocando o e-mail:
+
+```sql
+update public.profiles
+   set role = 'admin_geral', status = 'aprovado'
+ where email = 'seu-email@exemplo.com';
+```
+
+3. Recarregue o app — você entra como Administrador Geral
+
+Daí em diante, aprovar e promover é feito pela tela `/admin/usuarios`.
+
+### Confirmação de e-mail
+
+Por padrão o Supabase exige confirmar o e-mail antes do primeiro acesso. Para
+desligar enquanto testa: **Authentication → Sign In / Providers → Email**,
+desmarque **Confirm email**.
+
+Para manter ligada, veja [Confirmação de e-mail](#confirmação-de-e-mail-1)
+mais abaixo — exige ajustar a Site URL e, para funcionar entre aparelhos, um
+SMTP próprio.
 
 ### Testar o comportamento de PWA
 
@@ -86,29 +154,26 @@ proxy.ts              roda antes de cada request (era `middleware.ts` no Next 15
 
 ## Banco de dados
 
-O schema completo está em [`supabase/schema.sql`](./supabase/schema.sql): cole no
-SQL Editor do Supabase e execute (o script é idempotente).
-
 | Tabela | Papel |
 | --- | --- |
-| `profiles` | usuário, `role` e `status`; criada automaticamente no cadastro, como `pendente` |
+| `profiles` | usuário, `role` e `status`; criada no cadastro pelo gatilho `handle_new_user`, como `pendente` |
 | `horarios_padrao` | referência dos cultos fixos (Dom 8h/10h/18h · Qui 20h) |
 | `eventos` | um culto ou evento numa data + horário |
-| `contagens` | o número de pessoas de um evento (uma por evento) |
-
-Depois de rodar o script, cadastre-se pelo app e promova seu usuário a
-Administrador Geral com o comando comentado no fim do arquivo — sem um
-`admin_geral` ninguém consegue aprovar ninguém.
+| `contagens` | o número de pessoas de um evento — `UNIQUE(evento_id)`, então relançar corrige em vez de somar |
+| `totais_por_data` | view que soma por data, separando cultos de eventos |
 
 Os cultos fixos **não** viram linhas em `eventos` de antemão: a função
-`gerar_eventos_fixos(data)` cria sob demanda os horários daquele dia da semana.
+`gerar_eventos_fixos(data)` cria sob demanda os horários daquele dia da semana,
+com `on conflict do nothing` — abrir a mesma data duas vezes não duplica nada.
 
-## Variáveis de ambiente
+A view usa `security_invoker = true`, sem o qual ela rodaria com as permissões
+do dono e ignoraria a RLS.
 
-| Variável | Onde encontrar |
-| --- | --- |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase > Project Settings > API > Project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase > Project Settings > API > anon public |
+Para gerar os tipos TypeScript a partir do banco:
+
+```bash
+npx supabase gen types typescript --project-id <id> > types/database.ts
+```
 
 ## Autenticação
 
@@ -148,7 +213,7 @@ nenhum, mesmo que cheguem à tela.
 `maxAge`/`expires` — inclusive nas renovações de token feitas pelo proxy — e a
 sessão morre ao fechar o navegador.
 
-### Confirmação de e-mail
+### Confirmação de e-mail, em detalhe
 
 Com a confirmação ligada (o padrão do Supabase), o link do e-mail precisa cair
 em `/auth/confirm`, que troca o token por uma sessão. Sem essa configuração o
@@ -177,6 +242,93 @@ mensagem pedindo para abrir o link no aparelho certo.
 
 Para pular tudo isso durante os testes, desligue a confirmação em
 **Authentication > Sign In / Providers > Email**.
+
+## Deploy na Vercel
+
+### 1. Subir o código para o GitHub
+
+A Vercel publica a partir de um repositório. Crie um repositório **privado** no
+GitHub e envie o projeto:
+
+```bash
+git remote add origin https://github.com/SEU-USUARIO/contagem-culto.git
+git push -u origin main
+```
+
+O `.env.local` não vai junto — ele está no `.gitignore`, de propósito.
+
+### 2. Importar na Vercel
+
+1. Em [vercel.com](https://vercel.com), **Add New → Project**
+2. Escolha o repositório
+3. A Vercel reconhece o Next.js sozinho; não mexa em build command nem output
+
+### 3. Variáveis de ambiente
+
+Ainda na tela de importação, em **Environment Variables**, adicione as duas
+mesmas do `.env.local`:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Marque os três ambientes (Production, Preview, Development). Sem isso o app
+publica, mas abre na tela de "Supabase não configurado".
+
+Clique em **Deploy**.
+
+### 4. Apontar o Supabase para o endereço publicado
+
+No Supabase, **Authentication → URL Configuration**:
+
+- **Site URL**: `https://seu-projeto.vercel.app`
+- **Redirect URLs**: adicione `https://seu-projeto.vercel.app/auth/confirm`
+
+Sem isso, o link de confirmação de e-mail e o de recuperação de senha continuam
+apontando para `localhost`.
+
+### 5. Conferir
+
+Abra o endereço da Vercel no celular e instale na tela inicial: no Android,
+"Instalar app"; no iPhone, Safari → Compartilhar → "Adicionar à Tela de Início".
+
+A cada `git push` para a `main`, a Vercel publica sozinha.
+
+### Custos
+
+Tanto o plano gratuito da Vercel quanto o do Supabase cobrem folgado um app
+desse tamanho. O ponto de atenção é o Supabase: projetos gratuitos **pausam
+após alguns dias sem acesso** — os dados não somem, mas alguém precisa reativar
+pelo painel. Com uso semanal isso não acontece.
+
+## Estados de carregamento e erro
+
+Cada rota com dados tem seu `loading.tsx` — esqueletos cinzas no lugar do
+conteúdo, com `aria-busy` e um aviso só para leitores de tela. Isso evita a
+tela pular quando os dados chegam.
+
+`error.tsx` cobre as áreas protegida e de acesso: mostra uma mensagem em
+linguagem comum com botões "Tentar de novo" e "Voltar ao início". O detalhe
+técnico vai para o console, não para a tela. `not-found.tsx` cobre endereços
+que não existem.
+
+Nas mensagens de erro, falha de rede é separada de erro de senha: com o
+Supabase fora do ar, o login diz "Não conseguimos falar com o servidor" em vez
+de mandar a pessoa conferir o que digitou.
+
+## Ações destrutivas
+
+Nenhuma se aplica no primeiro clique. O botão abre um painel dizendo o que vai
+acontecer, e só o segundo clique executa:
+
+| Ação | Quem pode | O aviso explica |
+| --- | --- | --- |
+| Banir usuário | Administrador Geral | perde o acesso na hora; lançamentos permanecem; dá para reverter |
+| Promover a Administrador | Administrador Geral | a pessoa passa a poder banir você |
+| Excluir lançamento | Administrador Geral | o total do dia cai e o horário volta a pendente; para "ninguém veio", salve 0 |
+
+Excluir lançamento é restrito ao Administrador Geral de propósito, espelhando a
+política `contagens: admin remove`: corrigir um número é rotina do Contador,
+apagar histórico não é.
 
 ## Próximos passos
 

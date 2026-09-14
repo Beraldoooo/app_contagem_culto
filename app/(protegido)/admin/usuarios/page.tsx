@@ -39,7 +39,7 @@ export default async function UsuariosPage() {
   const banidos = usuarios.filter((u) => u.status === "banido");
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-5 py-8">
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-5 py-8 lg:max-w-5xl">
       <header className="flex flex-col gap-1">
         <Link
           href="/"
@@ -139,7 +139,7 @@ function Secao({
       {contagem === 0 ? (
         <p className="text-sm text-slate-500 dark:text-slate-400">{vazio}</p>
       ) : (
-        <ul className="flex flex-col gap-3">{children}</ul>
+        <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{children}</ul>
       )}
     </section>
   );

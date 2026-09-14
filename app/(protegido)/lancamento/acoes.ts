@@ -136,3 +136,48 @@ export async function salvarContagem(
     ok: quantidade === 1 ? "1 pessoa registrada." : `${quantidade} pessoas registradas.`,
   };
 }
+
+/**
+ * Apaga o lançamento de um horário — o registro some, diferente de salvar zero,
+ * que significa "ninguém veio".
+ *
+ * Restrito ao Administrador Geral, espelhando a política de RLS
+ * "contagens: admin remove": corrigir um número é rotina do Contador, apagar
+ * histórico não é.
+ */
+export async function excluirContagem(
+  _anterior: EstadoContagem,
+  formData: FormData,
+): Promise<EstadoContagem> {
+  const eventoId = String(formData.get("evento_id") ?? "");
+  if (!eventoId) return { erro: "Horário não informado." };
+
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { erro: "Sessão expirada. Entre novamente." };
+
+  const { data: perfil } = await supabase
+    .from("profiles")
+    .select("role, status")
+    .eq("id", user.id)
+    .maybeSingle();
+
+  if (perfil?.role !== "admin_geral" || perfil.status !== "aprovado") {
+    return { erro: "Só o Administrador Geral pode excluir um lançamento." };
+  }
+
+  const { data, error } = await supabase
+    .from("contagens")
+    .delete()
+    .eq("evento_id", eventoId)
+    .select("id");
+
+  if (error) return { erro: "Não foi possível excluir. Tente novamente." };
+  if (!data?.length) return { erro: "Não havia lançamento para excluir." };
+
+  revalidatePath("/lancamento");
+  return { ok: "Lançamento excluído." };
+}

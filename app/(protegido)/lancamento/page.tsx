@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 
 import { AtualizacaoAutomatica } from "@/components/atualizacao-automatica";
 import { AvisoSupabase } from "@/components/aviso-supabase";
-import { obterSessaoAtual, podeLancar } from "@/lib/auth/perfil";
+import { ehAdmin, obterSessaoAtual, podeLancar } from "@/lib/auth/perfil";
 import {
   DIAS_SEMANA,
   diaDaSemana,
@@ -31,6 +31,7 @@ export default async function LancamentoPage({
   // Visualizador entra, mas só lê. Quem edita é decidido aqui, repetido na
   // Server Action e garantido pela RLS — a tela é a camada mais fraca das três.
   const podeEditar = podeLancar(sessao.perfil);
+  const podeExcluir = ehAdmin(sessao.perfil);
 
   const hoje = hojeISO();
   const { data: dataParam } = await searchParams;
@@ -59,7 +60,11 @@ export default async function LancamentoPage({
       <FormularioData dataInicial={dataSelecionada ?? hoje} hoje={hoje} />
 
       {dataSelecionada ? (
-        <Horarios data={dataSelecionada} podeEditar={podeEditar} />
+        <Horarios
+          data={dataSelecionada}
+          podeEditar={podeEditar}
+          podeExcluir={podeExcluir}
+        />
       ) : (
         <ReferenciaHorarios />
       )}
@@ -70,9 +75,11 @@ export default async function LancamentoPage({
 async function Horarios({
   data,
   podeEditar,
+  podeExcluir,
 }: {
   data: string;
   podeEditar: boolean;
+  podeExcluir: boolean;
 }) {
   const supabase = await createClient();
 
@@ -190,6 +197,7 @@ async function Horarios({
             key={horario.id}
             horario={horario}
             podeEditar={podeEditar}
+            podeExcluir={podeExcluir}
           />
         ))}
       </ul>

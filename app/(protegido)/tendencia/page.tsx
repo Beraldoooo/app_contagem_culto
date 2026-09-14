@@ -127,7 +127,7 @@ export default async function TendenciaPage({
       : (opcoes.find((o) => o.valor === serieValida)?.rotulo ?? "");
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-8">
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-8 lg:max-w-4xl">
       <header className="flex flex-col gap-1">
         <Link
           href="/"
@@ -144,9 +144,9 @@ export default async function TendenciaPage({
       <form
         method="get"
         action="/tendencia"
-        className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900"
+        className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-end dark:border-slate-800 dark:bg-slate-900"
       >
-        <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col gap-1.5 sm:flex-1">
           <label
             htmlFor="serie"
             className="text-xs font-medium text-slate-600 dark:text-slate-400"
@@ -168,7 +168,7 @@ export default async function TendenciaPage({
           </select>
         </div>
 
-        <label className="flex items-center gap-2.5 text-sm">
+        <label className="flex items-center gap-2.5 text-sm sm:h-11 sm:shrink-0">
           <input
             type="checkbox"
             name="eventos"
@@ -181,7 +181,7 @@ export default async function TendenciaPage({
 
         <button
           type="submit"
-          className="h-11 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition hover:bg-blue-700"
+          className="h-11 shrink-0 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition hover:bg-blue-700"
         >
           Aplicar
         </button>

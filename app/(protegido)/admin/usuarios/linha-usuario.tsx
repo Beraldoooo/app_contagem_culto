@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import type { Profile, UserRole } from "@/types/database";
 
-import { AcaoConfirmada } from "./acao-confirmada";
+import { AcaoConfirmada } from "@/components/acao-confirmada";
 import {
   alterarPapel,
   aprovarUsuario,

@@ -3,7 +3,11 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
-import type { EstadoAcao } from "./acoes";
+/** Formato comum das Server Actions que passam por confirmação. */
+export type EstadoAcao = {
+  erro?: string;
+  ok?: string;
+};
 
 type Tom = "neutro" | "perigo" | "atencao";
 

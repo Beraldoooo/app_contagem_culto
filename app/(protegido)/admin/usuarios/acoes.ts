@@ -5,10 +5,9 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { UserRole } from "@/types/database";
 
-export type EstadoAcao = {
-  erro?: string;
-  ok?: string;
-};
+import type { EstadoAcao } from "@/components/acao-confirmada";
+
+export type { EstadoAcao };
 
 const PAPEIS_PERMITIDOS: UserRole[] = [
   "visualizador",
