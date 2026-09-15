@@ -3,6 +3,8 @@
 App web (PWA) para registrar, somar e arquivar a contagem de presença nos
 cultos e eventos da igreja. A especificação completa está em [CLAUDE.md](./CLAUDE.md).
 
+**No ar:** https://app-contagem-culto.vercel.app
+
 > **Estado atual:** esqueleto. Só a infraestrutura está pronta — nenhuma regra
 > de negócio (cultos, lançamentos, autenticação, comparativos) foi implementada.
 
@@ -297,8 +299,8 @@ Clique em **Deploy**.
 
 No Supabase, **Authentication → URL Configuration**:
 
-- **Site URL**: `https://seu-projeto.vercel.app`
-- **Redirect URLs**: adicione `https://seu-projeto.vercel.app/auth/confirm`
+- **Site URL**: `https://app-contagem-culto.vercel.app`
+- **Redirect URLs**: adicione `https://app-contagem-culto.vercel.app/auth/confirm`
 
 Sem isso, o link de confirmação de e-mail e o de recuperação de senha continuam
 apontando para `localhost`.
