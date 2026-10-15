@@ -5,7 +5,13 @@ import { TelaCentralizada } from "@/components/ui/tela-centralizada";
 
 export const metadata: Metadata = { title: "Link inválido" };
 
-const MOTIVOS: Record<string, { titulo: string; texto: string }> = {
+type Motivo = {
+  titulo: string;
+  texto: string;
+  acao?: { href: string; rotulo: string };
+};
+
+const MOTIVOS: Record<string, Motivo> = {
   expirado: {
     titulo: "Link expirado",
     texto:
@@ -21,6 +27,18 @@ const MOTIVOS: Record<string, { titulo: string; texto: string }> = {
     texto:
       "O endereço veio sem as informações de confirmação. Abra o link direto do e-mail, sem copiar e colar pela metade.",
   },
+  "recuperacao-expirada": {
+    titulo: "Link de recuperação expirado",
+    texto:
+      "Este link para criar uma nova senha já foi usado ou passou de 1 hora. Peça um novo — leva menos de um minuto.",
+    acao: { href: "/recuperar-senha", rotulo: "Pedir um novo link" },
+  },
+  "recuperacao-outro-aparelho": {
+    titulo: "Abra o link no mesmo aparelho",
+    texto:
+      "Este link precisa ser aberto no mesmo navegador em que você pediu a recuperação. Abra o e-mail naquele aparelho ou peça um novo link aqui.",
+    acao: { href: "/recuperar-senha", rotulo: "Pedir um novo link" },
+  },
   configuracao: {
     titulo: "Aplicativo não configurado",
     texto:
@@ -28,7 +46,7 @@ const MOTIVOS: Record<string, { titulo: string; texto: string }> = {
   },
 };
 
-const PADRAO = {
+const PADRAO: Motivo = {
   titulo: "Não foi possível confirmar",
   texto: "Tente entrar novamente para receber um novo link de confirmação.",
 };
@@ -38,13 +56,20 @@ export default async function LinkInvalidoPage({
 }: PageProps<"/link-invalido">) {
   const { motivo } = await searchParams;
   const chave = typeof motivo === "string" ? motivo : "";
-  const { titulo, texto } = MOTIVOS[chave] ?? PADRAO;
+  const { titulo, texto, acao } = MOTIVOS[chave] ?? PADRAO;
 
   return (
     <TelaCentralizada icone={IconeAlerta} tom="aviso" titulo={titulo} descricao={texto}>
-      <LinkBotao href="/login" larguraTotal>
-        Ir para o login
-      </LinkBotao>
+      <div className="flex flex-col gap-2">
+        {acao ? (
+          <LinkBotao href={acao.href} larguraTotal>
+            {acao.rotulo}
+          </LinkBotao>
+        ) : null}
+        <LinkBotao href="/login" variante={acao ? "secundario" : "principal"} larguraTotal>
+          Ir para o login
+        </LinkBotao>
+      </div>
     </TelaCentralizada>
   );
 }

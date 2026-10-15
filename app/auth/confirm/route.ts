@@ -47,6 +47,10 @@ export async function GET(request: NextRequest) {
   const tipo = searchParams.get("type") as EmailOtpType | null;
   const code = searchParams.get("code");
 
+  // Link de "esqueci minha senha": se falhar, a saída é pedir outro link, não
+  // tentar entrar de novo.
+  const ehRecuperacao = tipo === "recovery" || proximo === "/nova-senha";
+
   const supabase = await createClient();
 
   if (tokenHash && tipo && TIPOS_VALIDOS.includes(tipo)) {
@@ -54,14 +58,15 @@ export async function GET(request: NextRequest) {
       type: tipo,
       token_hash: tokenHash,
     });
-    if (error) return erro("expirado");
+    if (error) return erro(ehRecuperacao ? "recuperacao-expirada" : "expirado");
     return NextResponse.redirect(new URL(proximo, request.url));
   }
 
   if (code) {
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     // Aparelho diferente do que fez o cadastro: o verificador PKCE não existe aqui.
-    if (error) return erro("outro-aparelho");
+    if (error)
+      return erro(ehRecuperacao ? "recuperacao-outro-aparelho" : "outro-aparelho");
     return NextResponse.redirect(new URL(proximo, request.url));
   }
 

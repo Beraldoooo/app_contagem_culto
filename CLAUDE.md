@@ -27,7 +27,7 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
 - [x] Evento especial avulso com vários horários (`/evento-especial`)
 - [x] Soma automática do dia, atualizando sem recarregar
 - [x] Histórico com filtros e paginação (`/historico`)
-- [x] Comparativo com a semana anterior e gráfico de tendência (`/tendencia`), só com cultos fixos; eventos como marcadores opcionais
+- [x] Comparativo com a semana anterior e gráfico de tendência (`/relatorios`), só com cultos fixos; eventos como marcadores opcionais
 - [x] Auditoria das permissões do Visualizador contra a API real (`supabase/auditoria/visualizador.mjs`)
 - [x] Responsividade, `loading.tsx`, `error.tsx`, `not-found.tsx` e mensagens de erro amigáveis
 - [x] Publicado na Vercel
@@ -41,6 +41,8 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
       total, um embaixo do outro: uma barra por culto (últimos 24),
       verde se subiu e vermelha se caiu vs. o mesmo dia da semana anterior, com contagem de aumentos/quedas
       (`grafico-comparativo.tsx`, `compararCadaData` em `lib/comparativo.ts`)
+- [x] Recuperação de senha: "Esqueci minha senha" no login (`/recuperar-senha`), link do e-mail → `/auth/confirm`
+      → `/nova-senha`; "Alterar senha" em Configurações usa a mesma tela
 - [x] Tema escuro como padrão e tela **Configurações** (`/configuracoes`) para escolher Escuro ou Claro, salvo no
       aparelho (`lib/tema.ts`, `components/seletor-tema.tsx`)
 
@@ -51,13 +53,12 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
 - Destinos de navegação ficam só em `components/navegacao/itens.ts`.
 
 ### O que falta (antes do uso real)
-- [ ] **Redesenho, etapa 2 — conteúdo do painel inicial** (cartões de números, gráfico, comparativos no estilo
-      da referência de dashboard) — **próximo passo**
-- [ ] **Recuperação de senha** ("esqueci minha senha") — hoje só por `update` manual no SQL Editor
-      (a rota `app/auth/confirm/route.ts` já aceita o link de recuperação; faltam as telas e a action)
-- [ ] Conferir a configuração do Supabase em produção (Site URL / Redirect URLs, confirmação de e-mail)
+- [ ] **Configurar os e-mails no painel do Supabase** (feito pelo Beraldo; passo a passo no README, seção
+      "E-mails"): Site URL e Redirect URLs, modelos "Confirm signup" e "Reset Password" com `token_hash`, e SMTP
+      próprio para uso real — **próximo passo**
 - [ ] Revisar detalhes de domínio
-- [ ] **Fase 2**: envio automático do resumo do dia para o grupo de WhatsApp (adiada)
+- [ ] **Fase 2**: envio automático do resumo do dia para o grupo de WhatsApp — por último, mas é a prioridade
+      mais importante para o Beraldo
 
 ## 1. Visão Geral
 Aplicativo web responsivo (PWA) para registrar, somar e arquivar a contagem de pessoas presentes nos cultos, substituindo o processo atual (contagem enviada manualmente num grupo e perdida com o tempo). O sistema guarda o histórico permanentemente e permite comparar a frequência ao longo do tempo.

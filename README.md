@@ -93,9 +93,10 @@ Por padrão o Supabase exige confirmar o e-mail antes do primeiro acesso. Para
 desligar enquanto testa: **Authentication → Sign In / Providers → Email**,
 desmarque **Confirm email**.
 
-Para manter ligada, veja [Confirmação de e-mail](#confirmação-de-e-mail-1)
-mais abaixo — exige ajustar a Site URL e, para funcionar entre aparelhos, um
-SMTP próprio.
+Para manter ligada, veja
+[E-mails: confirmação de cadastro e recuperação de senha](#e-mails-confirmação-de-cadastro-e-recuperação-de-senha)
+mais abaixo — exige ajustar a Site URL, os modelos de e-mail e, para uso real,
+um SMTP próprio.
 
 ### Atualizações depois de publicado
 
@@ -133,7 +134,7 @@ Depois, no Chrome: DevTools > Application > Manifest / Service Workers, ou
 app/                  rotas (App Router)
   layout.tsx          metadata, viewport/theme-color, registro do SW
   manifest.ts         web app manifest -> /manifest.webmanifest
-  (auth)/             telas públicas: /login e /cadastro
+  (auth)/             /login, /cadastro, /recuperar-senha e /nova-senha
   (protegido)/        telas internas; o layout barra pendente/banido e
                       monta o menu lateral (desktop) e a barra inferior (celular)
     admin/usuarios/   painel de gestão de usuários (só admin_geral)
@@ -146,7 +147,7 @@ app/                  rotas (App Router)
   aguardando/         "sua conta aguarda aprovação"
   acesso-negado/      conta banida — encerra a sessão ao abrir
   link-invalido/      link de e-mail expirado, incompleto ou de outro aparelho
-  auth/confirm/route.ts  recebe o link de confirmação e cria a sessão
+  auth/confirm/route.ts  recebe o link de confirmação/recuperação e cria a sessão
   auth/sair/route.ts     logout sem redirecionar (usado pela tela de banido)
   offline/page.tsx    fallback exibido pelo SW quando não há rede
   icon.png            favicon / ícone da aba
@@ -211,6 +212,8 @@ npx supabase gen types typescript --project-id <id> > types/database.ts
 | Rota | Quem acessa |
 | --- | --- |
 | `/login`, `/cadastro` | qualquer um; quem já tem sessão é mandado para `/` |
+| `/recuperar-senha` | público — pede o link de "esqueci minha senha" |
+| `/nova-senha` | logado (pelo link de recuperação ou por Configurações) |
 | `/auth/confirm`, `/link-invalido` | público — é aqui que a sessão nasce, vinda do e-mail |
 | `/aguardando` | logado, status `pendente` |
 | `/acesso-negado` | pública — a tela encerra a sessão do usuário banido |
@@ -244,35 +247,67 @@ nenhum, mesmo que cheguem à tela.
 `maxAge`/`expires` — inclusive nas renovações de token feitas pelo proxy — e a
 sessão morre ao fechar o navegador.
 
-### Confirmação de e-mail, em detalhe
+### E-mails: confirmação de cadastro e recuperação de senha
 
-Com a confirmação ligada (o padrão do Supabase), o link do e-mail precisa cair
-em `/auth/confirm`, que troca o token por uma sessão. Sem essa configuração o
-link leva a uma página que não faz nada.
+Os dois links de e-mail caem em `/auth/confirm`, que troca o token por uma
+sessão e manda a pessoa adiante: a confirmação de cadastro vai para
+`/aguardando`; a recuperação de senha vai para `/nova-senha`.
 
-No painel do Supabase, em **Authentication > URL Configuration**:
+**1. Endereços** — no Supabase, **Authentication → URL Configuration**:
 
-- **Site URL**: o endereço onde o app realmente responde. `http://localhost:3000`
-  só funciona se você abrir o e-mail no mesmo computador que roda o `npm run dev`.
-  Para testar no celular, use o IP da máquina na rede (`http://192.168.x.x:3000`)
-  ou o domínio da Vercel depois do deploy.
-- **Redirect URLs**: acrescente `<sua-site-url>/auth/confirm`.
+- **Site URL**: `https://app-contagem-culto.vercel.app`. É a base dos links
+  dos e-mails; se estiver `http://localhost:3000`, os links só abrem no
+  computador de quem desenvolve.
+- **Redirect URLs**: `https://app-contagem-culto.vercel.app/**` (e, para
+  testar localmente, `http://localhost:3000/**`). O `/**` cobre o
+  `/auth/confirm?next=…` que o app manda nos links.
 
-Em **Authentication > Emails > Confirm signup**, troque o link do template por:
+**2. Modelos dos e-mails** — **sem SMTP próprio o Supabase não deixa editar
+os modelos**, e os padrões funcionam: o app informa o destino do link
+(`emailRedirectTo`/`redirectTo`), mas o link só abre no mesmo navegador em
+que a pessoa se cadastrou ou pediu a recuperação. Depois de configurar o SMTP
+(passo 3), em **Authentication → Emails**, troque o link de cada modelo. Os dois usam `token_hash`, que funciona mesmo abrindo o e-mail em
+outro aparelho (o modelo padrão do Supabase usa `?code=`, que só funciona no
+mesmo navegador — a rota aceita os dois, mas aí pede para abrir no aparelho
+certo).
+
+*Confirm signup*:
 
 ```html
-<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/aguardando">
-  Confirmar e-mail
-</a>
+<h2>Confirme seu e-mail</h2>
+<p>Clique abaixo para confirmar seu cadastro no Contagem Culto. Depois disso,
+o acesso ainda precisa ser aprovado pelo administrador.</p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/aguardando">Confirmar e-mail</a></p>
 ```
 
-Isso usa `token_hash`, que funciona mesmo se a pessoa abrir o e-mail em outro
-aparelho. O template padrão usa o fluxo PKCE (`?code=`), que exige o mesmo
-navegador do cadastro — a rota aceita os dois, mas nesse caso mostra uma
-mensagem pedindo para abrir o link no aparelho certo.
+*Reset Password*:
 
-Para pular tudo isso durante os testes, desligue a confirmação em
-**Authentication > Sign In / Providers > Email**.
+```html
+<h2>Criar nova senha</h2>
+<p>Recebemos um pedido para criar uma nova senha no Contagem Culto. O link vale por 1 hora.</p>
+<p><a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/nova-senha">Criar nova senha</a></p>
+<p>Se não foi você, ignore este e-mail — sua senha continua a mesma.</p>
+```
+
+**3. Quem envia os e-mails (SMTP)** — o envio padrão do Supabase serve para
+testes: tem limite baixo de mensagens por hora e pode entregar só para os
+e-mails da equipe do projeto. Para uso real, configure um SMTP próprio em
+**Project Settings → Authentication → SMTP Settings** (por exemplo o Resend,
+que tem plano gratuito, ou uma conta Gmail com senha de app).
+
+**4. Ligar a confirmação** — **Authentication → Sign In / Providers → Email**,
+**Confirm email** marcado. Para testes rápidos dá para desmarcar; o app
+funciona dos dois jeitos.
+
+### Esqueci minha senha / alterar senha
+
+- No login, **Esqueci minha senha** leva a `/recuperar-senha`: a pessoa
+  informa o e-mail e recebe o link. A resposta é a mesma exista a conta ou
+  não, para não revelar quem usa o app.
+- O link abre `/nova-senha`, onde a senha é trocada. Link vencido ou de outro
+  aparelho cai em `/link-invalido` com o botão **Pedir um novo link**.
+- Quem está logado troca a senha em **Configurações → Alterar senha** (mesma
+  tela `/nova-senha`).
 
 ## Deploy na Vercel
 
@@ -409,21 +444,16 @@ A especificação do `CLAUDE.md` está coberta.
 
 Antes do uso real, falta:
 
-9. **Recuperação de senha** ("esqueci minha senha") — não existe; hoje a saída
-   é trocar a senha pelo SQL Editor:
-
-   ```sql
-   update auth.users
-      set encrypted_password = extensions.crypt('SENHA-NOVA', extensions.gen_salt('bf'))
-    where email = 'email@exemplo.com';
-   ```
-
-10. Conferir a configuração do Supabase em produção (Site URL, Redirect URLs e
-    confirmação de e-mail — ver [Deploy](#deploy-na-vercel)).
+9. ~~Recuperação de senha~~ — feito: "Esqueci minha senha" no login e
+   "Alterar senha" em Configurações.
+10. **Configurar os e-mails no Supabase** (Site URL, Redirect URLs, modelos e
+    SMTP) — ver [E-mails](#e-mails-confirmação-de-cadastro-e-recuperação-de-senha).
+    Sem isso o link de recuperação não chega ou não abre.
 11. ~~Redesenho da estrutura e da navegação~~ — feito: menu lateral no
     desktop, barra inferior no celular, padrão visual único em todas as telas
     e "Tendência" renomeada para "Relatórios".
-12. **Conteúdo do painel inicial** (dashboard) — próxima etapa do redesenho.
+12. ~~Conteúdo do painel inicial~~ — feito: resumo do último culto e gráficos
+    de Domingos e Quintas.
 13. Revisar detalhes de domínio.
 
 Fase 2 do escopo original (envio automático do resumo para o WhatsApp) segue
