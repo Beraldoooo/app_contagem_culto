@@ -37,6 +37,8 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
       "Lançar" em destaque, menu respeitando papéis, padrão visual único (tokens em `app/globals.css`,
       componentes em `components/ui/`) aplicado a todas as telas; "Tendência" virou "Relatórios" (`/relatorios`,
       com `/tendencia` redirecionando)
+- [x] Tabela "Comparativo por culto" no Início: últimos 10 cultos fixos, cada um com o total e o aumento/queda
+      em relação ao mesmo dia da semana anterior (`tabela-comparativo.tsx`, `compararCadaData` em `lib/comparativo.ts`)
 - [x] Tema escuro como padrão e tela **Configurações** (`/configuracoes`) para escolher Escuro ou Claro, salvo no
       aparelho (`lib/tema.ts`, `components/seletor-tema.tsx`)
 

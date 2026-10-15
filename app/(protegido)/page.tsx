@@ -6,6 +6,7 @@ import { obterSessaoAtual, podeLancar, ROTULO_ROLE } from "@/lib/auth/perfil";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 
 import { ResumoDoDia } from "./resumo-do-dia";
+import { TabelaComparativo } from "./tabela-comparativo";
 
 export default async function Home() {
   if (!hasSupabaseEnv()) return <AvisoSupabase />;
@@ -29,8 +30,9 @@ export default async function Home() {
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start">
         <ResumoDoDia />
+        <TabelaComparativo />
       </div>
     </Pagina>
   );

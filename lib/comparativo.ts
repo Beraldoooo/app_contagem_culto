@@ -48,13 +48,39 @@ export function compararComSemanaAnterior(
     return { atual, anterior, diferenca: null, percentual: null };
   }
 
+  return { atual, anterior, ...variacao(atual, anterior) };
+}
+
+function variacao(atual: LinhaCulto, anterior: LinhaCulto) {
   const diferenca = atual.total_cultos - anterior.total_cultos;
   const percentual =
     anterior.total_cultos > 0
       ? (diferenca / anterior.total_cultos) * 100
       : null;
+  return { diferenca, percentual };
+}
 
-  return { atual, anterior, diferenca, percentual };
+/**
+ * A mesma comparação de `compararComSemanaAnterior`, mas para cada data da
+ * lista: cada culto contra a ocorrência anterior do mesmo dia da semana que
+ * tem contagem. Datas ainda sem nenhum horário lançado ficam de fora.
+ *
+ * @param linhas datas com culto fixo, da mais recente para a mais antiga.
+ */
+export function compararCadaData(linhas: LinhaCulto[]): Comparativo[] {
+  const contadas = linhas.filter(
+    (l) => l.horarios_cultos > 0 && l.lancados_cultos > 0,
+  );
+
+  return contadas.map((atual, i) => {
+    const dia = diaDaSemana(atual.data);
+    const anterior =
+      contadas.slice(i + 1).find((l) => diaDaSemana(l.data) === dia) ?? null;
+
+    return anterior
+      ? { atual, anterior, ...variacao(atual, anterior) }
+      : { atual, anterior, diferenca: null, percentual: null };
+  });
 }
 
 /** "+129" · "-42" · "0" */
