@@ -161,7 +161,7 @@ components/           componentes de UI compartilhados
 lib/datas.ts          dia da semana e formatação, sem depender de fuso
 lib/tema.ts           tema escuro/claro: padrão, chave salva e script do <head>
 lib/comparativo.ts    compara cada culto com a mesma ocorrência da semana anterior
-                      (resumo e tabela "Comparativo por culto" do Início)
+                      (resumo e gráficos de Domingos/Quintas do Início)
 lib/auth/
   acoes.ts            Server Actions: entrar, cadastrar, sair
   perfil.ts           sessão + perfil do usuário, helpers de papel
