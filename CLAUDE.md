@@ -84,9 +84,119 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
 - [ ] **"Recusar" cadastro pendente** em `/admin/usuarios` — pedido pelo Beraldo, ainda não feito. Ideia discutida:
       recusar = `status: banido` com `role` ainda `pendente` (a tela mostra "Recusado"), e "Reconsiderar" devolve
       para `pendente`. Apagar a conta de vez exigiria a chave service_role, que o app não tem.
-- [ ] Revisar detalhes de domínio
+- [ ] **Remodelar a contagem** conforme a seção 0.1 — o app guarda um número por horário e a igreja conta
+      por categoria e por ministério. Fazer **antes** de a igreja começar a usar e antes de importar 2024/2025.
+- [ ] **Importar as planilhas de 2024 e 2025** (ver 0.1). Só depois do modelo certo, e nunca direto em produção.
 - [ ] **Fase 2**: envio automático do resumo do dia para o grupo de WhatsApp — por último, mas é a prioridade
-      mais importante para o Beraldo
+      mais importante para o Beraldo. A seção 0.1 já traz o formato exato das mensagens.
+
+## 0.1 Como a contagem funciona de verdade
+
+> Levantado em 2026-10-15, depois de o Beraldo apresentar o app ao responsável pelas contagens.
+> **Isto substitui a seção 4.2**, que descrevia um número único por horário — era o entendimento inicial e
+> está errado. Fontes: 3 fichas de papel do domingo 11/10/2026 (8h, 10h e 18h) e as 4 mensagens que ele
+> manda no grupo. A aritmética das fichas foi conferida contra as mensagens e fecha.
+
+### Cultos fixos
+Domingo 8h, 10h e 18h · Quinta 20h · **Quarta 14h30 "Culto da Esperança"** (novo, ainda não cadastrado).
+Quarta é só uma linha em `horarios_padrao` — `gerar_eventos_fixos` lê essa tabela, não tem dia escrito no
+código:
+
+```sql
+insert into public.horarios_padrao (dia_semana, horario, nome)
+values (3, '14:30', 'Culto da Esperança');
+```
+
+### A ficha de papel (o que ele preenche)
+Três blocos:
+
+1. **Resumo** — Adultos · Crianças · Adolescentes · Pads · TOTAL
+2. **Fora do culto**, duas colunas por ministério: **quantos serviram** e **quantas pessoas atenderam** —
+   Crianças no culto (só público), Estacionamento (só servindo), Berçário, Maternal, Kids, Pads, Adolescentes
+3. **Dentro do culto** (só servindo) — Pastores, Louvor, Projeção, Áudio, Iluminação, Mídias, Hospitalidade,
+   Dízimos, Livraria
+
+### Regras de cálculo (conferidas nas 3 fichas)
+- `Kids` da mensagem = Crianças no culto + Berçário + Maternal + Kids. Em 11/10 10h: 9+8+15+100 = **132** ✓
+- `Pads` e `Adolescentes` são linhas próprias, **fora** de Kids
+- `Servindo Dentro` = bloco "dentro" **menos os pastores**. 8h: 26 − 10 = **16** ✓
+- `Equipe pastoral` = só os Pastores, linha separada
+- `Servindo Fora` = soma da coluna "servindo" do bloco de fora. 10h: 3+6+8+32+13+4 = **66** ✓
+- **TOTAL simples** = Adultos + Kids + Pads + Adolescentes (só congregação)
+- **TOTAL detalhado** = simples + Servindo Dentro + Servindo Fora + Equipe pastoral
+
+> ⚠️ **Quem serve SOMA, não é recorte.** `Adultos: 203` é só congregação; os 16 de dentro, 2 de fora e 10
+> pastores estão **fora** desse número. Por isso o mesmo culto tem dois totais: **208** simples e **236**
+> detalhado. Tratar "dentro" como subconjunto dos adultos infla nada e some com 30–50 pessoas por culto no
+> detalhado — foi o erro que eu cometi na primeira leitura das fichas.
+
+> ⚠️ **"Kids" tem dois significados.** Na mensagem é o total de crianças (132); na ficha é só o ministério
+> Kids (100). Nomear diferente no app, ou alguém vai somar errado.
+
+### As mensagens do grupo (domingo)
+Ele manda a **frequência simples acumulada** depois de cada culto: só 8h; depois 8h+10h; depois as três.
+O app precisa montar essa mensagem em qualquer momento do dia, com o que já foi lançado.
+
+```
+*FREQUÊNCIA | DOMINGO 11/10/26*
+
+*Culto das 08h*
+Adultos: 203
+Kids: 5
+TOTAL: 208
+
+*Culto das 10h*
+Adultos: 715
+Kids: 132
+Pads: 45
+Adoles: 92
+TOTAL: 984
+
+*Culto das 18h*
+Adultos: 572
+Kids: 94
+Pads: 29
+TOTAL: 695
+```
+
+Linha sem número não aparece: às 8h não há Pads nem Adoles; às 18h não há Adoles, porque **o culto de
+adolescentes só acontece às 10h**.
+
+No fim do dia, a **frequência detalhada**:
+
+```
+*FREQUÊNCIA DETALHADA | DOMINGO DIA 11/10/2026*
+Culto das 08h
+Adultos: 203
+Servindo Dentro: 16
+Servindo Fora: 2
+Kids: 5
+Equipe pastoral: 10
+*TOTAL: 236*
+...
+Total Adultos: 1490
+Total Servindo Dentro: 93
+Total Servindo Fora: 98
+Total Kids: 231
+Total Pads: 74
+
+*TOTAL GERAL: 2106*
+```
+
+### O que isso exige do modelo
+Tudo acima sai de um único lançamento por culto, se o banco guardar, por evento e por ministério,
+**dois números — servindo e público**. As duas mensagens viram consulta, não digitação extra.
+
+O Beraldo pediu explicitamente que o servindo fique **separado por ministério**, para permitir filtro
+depois.
+
+### Ainda em aberto
+- Formato das mensagens de **quinta** e do **Culto da Esperança** (o de domingo não serve de molde)
+- Nos totais do fim faltam "Total Adolescentes" (92) e "Total Equipe pastoral" (28) — de propósito?
+- Guardar os ministérios de dentro separados (Louvor, Projeção…) ou só o total `Servindo Dentro`?
+- Faixas etárias exatas: Pads = 9 a 12; Kids ≈ 5 a 8/9; Berçário e Maternal abaixo disso
+- **Planilhas de 2024 e 2025** — ainda não vistas. São elas que definem se as colunas mudaram ao longo do
+  tempo, e o formato do banco tem que caber nelas para os dois anos entrarem inteiros
 
 ## 1. Visão Geral
 Aplicativo web responsivo (PWA) para registrar, somar e arquivar a contagem de pessoas presentes nos cultos, substituindo o processo atual (contagem enviada manualmente num grupo e perdida com o tempo). O sistema guarda o histórico permanentemente e permite comparar a frequência ao longo do tempo.
@@ -108,13 +218,21 @@ Dois tipos de registro:
 - **Culto fixo** (recorrente): já tem horários pré-definidos — só precisa escolher a data.
   - Domingo: 8h, 10h, 18h
   - Quinta-feira: 20h
+  - Quarta-feira: 14h30 — "Culto da Esperança" (levantado em 15/10/2026, ainda não cadastrado; ver 0.1)
 - **Evento especial** (avulso): para datas fora da rotina normal (ex: "Culto de Homens" numa terça, evento anual de sábado). Ao criar, a pessoa informa: nome do evento, data e horário(s). Funciona como os cultos fixos para efeito de lançamento e soma, mas fica marcado como "evento" para não distorcer o comparativo dos cultos regulares.
 
 ### 4.2 Lançamento de contagem
+> ⚠️ **Superado pela seção 0.1.** O "um número por horário" descrito abaixo foi o entendimento inicial e
+> não é como a igreja conta. Vale só o que diz respeito ao ritmo (lançar ao longo do dia); os números são
+> por categoria e por ministério, não um só.
+
 - A pessoa pode lançar a contagem de cada horário **de forma independente e ao longo do dia** (não precisa esperar todos os cultos do dia acabarem).
 - Exemplo: lança "Culto 8h: 120 pessoas" assim que esse culto termina, depois "Culto 10h: 95 pessoas" mais tarde, etc.
 
 ### 4.3 Soma automática
+> ⚠️ **Ver seção 0.1**: existem **dois** totais por culto (simples e detalhado), e o detalhado inclui quem
+> está servindo. Não existe "o total" no singular.
+
 - O sistema soma automaticamente os lançamentos do dia e mostra o total geral daquele domingo/quinta.
 
 ### 4.4 Histórico permanente
