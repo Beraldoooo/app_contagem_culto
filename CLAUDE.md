@@ -31,14 +31,14 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
 - [x] Auditoria das permissões do Visualizador contra a API real (`supabase/auditoria/visualizador.mjs`)
 - [x] Responsividade, `loading.tsx`, `error.tsx`, `not-found.tsx` e mensagens de erro amigáveis
 - [x] Publicado na Vercel
+- [x] Dados de teste removidos do banco (conferido em 2026-10-15: 0 horários, 0 contagens, 3 usuários)
+- [x] `README.md` atualizado com o estado real do projeto
 
 ### O que falta (antes do uso real)
-- [ ] **Limpar os dados de teste** do banco (~86 horários e ~82 contagens fictícias) — **próximo passo**
-- [ ] **Recuperação de senha** ("esqueci minha senha") — hoje só por `update` manual no SQL Editor
+- [ ] **Recuperação de senha** ("esqueci minha senha") — **próximo passo**; hoje só por `update` manual no SQL Editor
       (a rota `app/auth/confirm/route.ts` já aceita o link de recuperação; faltam as telas e a action)
 - [ ] Conferir a configuração do Supabase em produção (Site URL / Redirect URLs, confirmação de e-mail)
 - [ ] Revisar detalhes de domínio e acabamento visual
-- [ ] Corrigir o `README.md`: o aviso "Estado atual: esqueleto" e o passo "Publicar na Vercel" estão desatualizados
 - [ ] **Fase 2**: envio automático do resumo do dia para o grupo de WhatsApp (adiada)
 
 ## 1. Visão Geral

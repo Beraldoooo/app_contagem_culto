@@ -5,8 +5,9 @@ cultos e eventos da igreja. A especificação completa está em [CLAUDE.md](./CL
 
 **No ar:** https://app-contagem-culto.vercel.app
 
-> **Estado atual:** esqueleto. Só a infraestrutura está pronta — nenhuma regra
-> de negócio (cultos, lançamentos, autenticação, comparativos) foi implementada.
+> **Estado atual:** MVP completo e publicado. Banco de produção limpo (sem dados
+> de teste) e pronto para as contagens reais. Detalhes em
+> [Próximos passos](#próximos-passos).
 
 ## Stack
 
@@ -361,15 +362,26 @@ apagar histórico não é.
    comparativo quanto a linha do gráfico usam apenas `culto_fixo`; eventos
    especiais entram no gráfico como marcadores separados e opcionais.
 
-A especificação do `CLAUDE.md` está coberta. Antes do uso real, falta:
+A especificação do `CLAUDE.md` está coberta.
 
-7. **Limpar os dados de teste** do banco — hoje há 86 horários e 82 contagens
-   fictícias, criados durante a construção.
-8. **Recuperação de senha** ("esqueci minha senha") — não existe; hoje a saída
-   é um `update` manual no SQL Editor.
-9. **Publicar** na Vercel (ver [Deploy](#deploy-na-vercel)) — o app só roda no
-   computador de quem desenvolve.
-10. Revisar detalhes de domínio e o acabamento visual.
+7. ~~Limpar os dados de teste do banco~~ — feito (conferido em 15/10/2026:
+   0 horários, 0 contagens e 3 usuários).
+8. ~~Publicar na Vercel~~ — feito: https://app-contagem-culto.vercel.app
+
+Antes do uso real, falta:
+
+9. **Recuperação de senha** ("esqueci minha senha") — não existe; hoje a saída
+   é trocar a senha pelo SQL Editor:
+
+   ```sql
+   update auth.users
+      set encrypted_password = extensions.crypt('SENHA-NOVA', extensions.gen_salt('bf'))
+    where email = 'email@exemplo.com';
+   ```
+
+10. Conferir a configuração do Supabase em produção (Site URL, Redirect URLs e
+    confirmação de e-mail — ver [Deploy](#deploy-na-vercel)).
+11. Revisar detalhes de domínio e o acabamento visual.
 
 Fase 2 do escopo original (envio automático do resumo para o WhatsApp) segue
 adiada, como previsto desde o início.
