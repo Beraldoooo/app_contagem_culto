@@ -23,6 +23,8 @@ export type Database = {
         Row: {
           id: string;
           email: string;
+          /** Nome de exibição. `null` = não informado (mostra o e-mail). */
+          nome: string | null;
           role: UserRole;
           status: UserStatus;
           created_at: string;
@@ -30,6 +32,7 @@ export type Database = {
         Insert: {
           id: string;
           email: string;
+          nome?: string | null;
           role?: UserRole;
           status?: UserStatus;
           created_at?: string;
@@ -37,6 +40,7 @@ export type Database = {
         Update: {
           id?: string;
           email?: string;
+          nome?: string | null;
           role?: UserRole;
           status?: UserStatus;
           created_at?: string;
@@ -164,6 +168,7 @@ export type Database = {
       tem_acesso: { Args: Record<string, never>; Returns: boolean };
       pode_lancar: { Args: Record<string, never>; Returns: boolean };
       eh_admin: { Args: Record<string, never>; Returns: boolean };
+      definir_meu_nome: { Args: { p_nome: string }; Returns: undefined };
     };
     Enums: {
       user_role: UserRole;

@@ -48,6 +48,11 @@ export function ehAdmin(perfil: Profile | null): boolean {
   return perfil?.status === "aprovado" && perfil.role === "admin_geral";
 }
 
+/** Nome para mostrar na tela. Nunca cai para o e-mail: quem não definiu nome vê "Sem nome". */
+export function nomeDeExibicao(perfil: Profile | null): string | null {
+  return perfil?.nome?.trim() || null;
+}
+
 export const ROTULO_ROLE: Record<Profile["role"], string> = {
   admin_geral: "Administrador Geral",
   contador: "Contador",

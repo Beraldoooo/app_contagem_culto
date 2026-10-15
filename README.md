@@ -39,7 +39,8 @@ novo não quebra nada nem duplica dados.
 
 > Se você já tinha rodado uma versão anterior do schema, rode também
 > [`supabase/totais-por-data.sql`](./supabase/totais-por-data.sql), que cria só
-> a view de totais.
+> a view de totais, e [`supabase/nome-exibicao.sql`](./supabase/nome-exibicao.sql),
+> que cria o nome de exibição dos usuários.
 
 ### 3. Conectar o app ao banco
 
@@ -180,6 +181,7 @@ public/
 supabase/
   schema.sql          tabelas, enums, triggers, RLS e seed — rodar no SQL Editor
   totais-por-data.sql view que soma por data (já incluída no schema.sql)
+  nome-exibicao.sql   nome de exibição dos usuários (já incluído no schema.sql)
   auditoria/          scripts que conferem as permissões contra a API real
 proxy.ts              roda antes de cada request (era `middleware.ts` no Next 15)
 ```
@@ -188,7 +190,7 @@ proxy.ts              roda antes de cada request (era `middleware.ts` no Next 15
 
 | Tabela | Papel |
 | --- | --- |
-| `profiles` | usuário, `role` e `status`; criada no cadastro pelo gatilho `handle_new_user`, como `pendente` |
+| `profiles` | usuário, `nome` de exibição, `role` e `status`; criada no cadastro pelo gatilho `handle_new_user`, como `pendente` |
 | `horarios_padrao` | referência dos cultos fixos (Dom 8h/10h/18h · Qui 20h) |
 | `eventos` | um culto ou evento numa data + horário |
 | `contagens` | o número de pessoas de um evento — `UNIQUE(evento_id)`, então relançar corrige em vez de somar |
@@ -298,6 +300,16 @@ que tem plano gratuito, ou uma conta Gmail com senha de app).
 **4. Ligar a confirmação** — **Authentication → Sign In / Providers → Email**,
 **Confirm email** marcado. Para testes rápidos dá para desmarcar; o app
 funciona dos dois jeitos.
+
+### Nome de exibição
+
+O app nunca mostra o e-mail no menu: no cadastro a pessoa informa um **nome de
+exibição** (vai em `options.data` do `signUp`, e o gatilho `handle_new_user`
+grava em `profiles.nome`). Quem se cadastrou antes vê "Definir meu nome" no
+menu e troca em **Configurações**. A troca usa a função
+`definir_meu_nome()`, e não um UPDATE direto: assim ninguém ganha permissão de
+alterar a própria linha de `profiles` (onde também ficam papel e status). O
+administrador vê nome e e-mail na tela de Usuários.
 
 ### Esqueci minha senha / alterar senha
 

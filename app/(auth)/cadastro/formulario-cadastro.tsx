@@ -20,6 +20,17 @@ export function FormularioCadastro() {
   return (
     <form action={acao} className="flex flex-col gap-4">
       <Campo
+        rotulo="Nome de exibição"
+        name="nome"
+        type="text"
+        autoComplete="nickname"
+        required
+        maxLength={60}
+        placeholder="Como você quer aparecer no app"
+        dica="É o que aparece no app no lugar do seu e-mail. O e-mail só o administrador vê."
+      />
+
+      <Campo
         rotulo="E-mail"
         name="email"
         type="email"

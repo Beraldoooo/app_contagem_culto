@@ -43,6 +43,9 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
       (`grafico-comparativo.tsx`, `compararCadaData` em `lib/comparativo.ts`)
 - [x] Recuperação de senha: "Esqueci minha senha" no login (`/recuperar-senha`), link do e-mail → `/auth/confirm`
       → `/nova-senha`; "Alterar senha" em Configurações usa a mesma tela
+- [x] Nome de exibição: informado no cadastro (`profiles.nome`), trocável em Configurações via função
+      `definir_meu_nome()`; o menu mostra o nome, nunca o e-mail (o admin vê os dois em Usuários).
+      Banco: `supabase/nome-exibicao.sql`
 - [x] Tema escuro como padrão e tela **Configurações** (`/configuracoes`) para escolher Escuro ou Claro, salvo no
       aparelho (`lib/tema.ts`, `components/seletor-tema.tsx`)
 

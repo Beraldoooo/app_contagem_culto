@@ -51,10 +51,15 @@ $$;
 create table if not exists public.profiles (
   id         uuid primary key references auth.users (id) on delete cascade,
   email      text not null,
+  -- nome de exibição, mostrado no menu no lugar do e-mail
+  nome       text check (nome is null or char_length(nome) between 1 and 60),
   role       public.user_role   not null default 'pendente',
   status     public.user_status not null default 'pendente',
   created_at timestamptz        not null default now()
 );
+
+-- Bancos criados antes do nome de exibição: acrescenta a coluna.
+alter table public.profiles add column if not exists nome text;
 
 comment on table  public.profiles        is 'Perfil e permissões de cada usuário.';
 comment on column public.profiles.role   is 'Papel: admin_geral, contador, visualizador ou pendente.';
@@ -220,8 +225,15 @@ security definer
 set search_path = ''
 as $$
 begin
-  insert into public.profiles (id, email, role, status)
-  values (new.id, new.email, 'pendente', 'pendente')
+  -- O app manda o nome em options.data do signUp (raw_user_meta_data).
+  insert into public.profiles (id, email, nome, role, status)
+  values (
+    new.id,
+    new.email,
+    left(nullif(btrim(new.raw_user_meta_data ->> 'nome'), ''), 60),
+    'pendente',
+    'pendente'
+  )
   on conflict (id) do nothing;
   return new;
 end;
@@ -231,6 +243,33 @@ drop trigger if exists on_auth_user_created on auth.users;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- 4.1b Cada pessoa troca só o próprio nome de exibição — sem abrir UPDATE em
+--      profiles, que deixaria alguém mudar o próprio papel.
+create or replace function public.definir_meu_nome(p_nome text)
+returns void
+language plpgsql
+security definer
+set search_path = ''
+as $$
+declare
+  limpo text := nullif(btrim(p_nome), '');
+begin
+  if (select auth.uid()) is null then
+    raise exception 'Sessão inválida.';
+  end if;
+  if limpo is not null and char_length(limpo) > 60 then
+    raise exception 'O nome pode ter no máximo 60 caracteres.';
+  end if;
+
+  update public.profiles
+     set nome = limpo
+   where id = (select auth.uid());
+end;
+$$;
+
+revoke execute on function public.definir_meu_nome(text) from public;
+grant execute on function public.definir_meu_nome(text) to authenticated;
 
 -- 4.2 Mantém contagens.updated_at
 create or replace function public.set_updated_at()
