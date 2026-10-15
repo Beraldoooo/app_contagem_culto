@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { Alerta } from "@/components/alerta";
 import { AvisoSupabase } from "@/components/aviso-supabase";
+import { CabecalhoPagina, Pagina, Selo, Vazio } from "@/components/ui/base";
+import { LinkBotao } from "@/components/ui/botao";
 import { obterSessaoAtual } from "@/lib/auth/perfil";
 import { ehDataValida, formatarDataLonga } from "@/lib/datas";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
@@ -78,50 +81,32 @@ export default async function HistoricoPage({
   };
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-8">
-      <header className="flex flex-col gap-1">
-        <Link
-          href="/"
-          className="text-sm text-slate-600 underline underline-offset-4 dark:text-slate-400"
-        >
-          ← Voltar
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Histórico</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          Todas as datas registradas, da mais recente para a mais antiga.
-        </p>
-      </header>
+    <Pagina largura="estreita">
+      <CabecalhoPagina
+        titulo="Histórico"
+        descricao="Todas as datas registradas, da mais recente para a mais antiga."
+      />
 
       <Filtros de={de} ate={ate} tipo={tipo} temFiltro={temFiltro} />
 
       {viewAusente ? (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-900/60 dark:bg-amber-950/40 dark:text-amber-200">
-          <p className="font-medium">Falta um passo no banco</p>
-          <p className="mt-1">
-            Rode o arquivo{" "}
-            <code className="rounded bg-amber-100 px-1 py-0.5 text-xs dark:bg-amber-950">
-              supabase/totais-por-data.sql
-            </code>{" "}
-            no SQL Editor do Supabase. Ele cria a view que soma os totais por
-            data.
-          </p>
-        </div>
+        <Alerta tom="aviso">
+          <strong className="font-semibold">Falta um passo no banco.</strong>{" "}
+          Rode o arquivo <code className="text-xs">supabase/totais-por-data.sql</code>{" "}
+          no SQL Editor do Supabase. Ele cria a view que soma os totais por
+          data.
+        </Alerta>
       ) : error ? (
-        <p
-          role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200"
-        >
-          Não foi possível carregar o histórico.
-        </p>
+        <Alerta tom="erro">Não foi possível carregar o histórico.</Alerta>
       ) : linhas.length === 0 ? (
-        <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
+        <Vazio>
           {temFiltro
             ? "Nenhuma data encontrada com esses filtros."
             : "Nenhuma contagem registrada ainda."}
-        </p>
+        </Vazio>
       ) : (
         <>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
+          <p className="text-sm text-texto-2">
             {totalDeDatas} {totalDeDatas === 1 ? "data" : "datas"}
             {totalPaginas > 1 ? ` · página ${pagina} de ${totalPaginas}` : ""}
           </p>
@@ -135,22 +120,24 @@ export default async function HistoricoPage({
           {totalPaginas > 1 ? (
             <nav className="flex items-center justify-between gap-3">
               {pagina > 1 ? (
-                <Link
+                <LinkBotao
                   href={comFiltros({ pagina: pagina - 1 })}
-                  className="flex h-11 flex-1 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+                  variante="secundario"
+                  className="flex-1"
                 >
                   ← Mais recentes
-                </Link>
+                </LinkBotao>
               ) : (
                 <span className="flex-1" />
               )}
               {pagina < totalPaginas ? (
-                <Link
+                <LinkBotao
                   href={comFiltros({ pagina: pagina + 1 })}
-                  className="flex h-11 flex-1 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+                  variante="secundario"
+                  className="flex-1"
                 >
                   Mais antigas →
-                </Link>
+                </LinkBotao>
               ) : (
                 <span className="flex-1" />
               )}
@@ -158,7 +145,7 @@ export default async function HistoricoPage({
           ) : null}
         </>
       )}
-    </main>
+    </Pagina>
   );
 }
 
@@ -211,27 +198,23 @@ function ItemData({
     <li>
       <Link
         href={`/lancamento?data=${linha.data}`}
-        className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4 transition hover:border-slate-300 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700 dark:hover:bg-slate-800"
+        className="flex items-center justify-between gap-3 rounded-cartao border border-borda bg-superficie p-5 shadow-cartao transition hover:border-marca/40 hover:bg-superficie-suave"
       >
         <div className="flex min-w-0 flex-col gap-1">
-          <span className="truncate text-sm font-medium first-letter:uppercase">
+          <span className="truncate text-[15px] font-semibold first-letter:uppercase">
             {formatarDataLonga(linha.data)}
           </span>
 
           <div className="flex flex-wrap items-center gap-1.5">
             {(tipo === "todos" || tipo === "culto_fixo") &&
             linha.tem_culto_fixo ? (
-              <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700 dark:bg-slate-800 dark:text-slate-300">
-                Culto
-              </span>
+              <Selo tom="marca">Culto</Selo>
             ) : null}
             {(tipo === "todos" || tipo === "evento_especial") &&
             linha.tem_evento_especial ? (
-              <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800 dark:bg-violet-950/60 dark:text-violet-300">
-                Evento
-              </span>
+              <Selo tom="evento">Evento</Selo>
             ) : null}
-            <span className="text-xs text-slate-500 dark:text-slate-400">
+            <span className="text-xs text-texto-3">
               {pendentes > 0
                 ? `${lancados} de ${horarios} lançados`
                 : `${horarios} ${horarios === 1 ? "horário" : "horários"}`}
@@ -240,10 +223,10 @@ function ItemData({
         </div>
 
         <div className="shrink-0 text-right">
-          <span className="block text-xl font-semibold tabular-nums">
+          <span className="block text-2xl font-bold tabular-nums">
             {total}
           </span>
-          <span className="block text-xs text-slate-500 dark:text-slate-400">
+          <span className="block text-xs text-texto-3">
             {total === 1 ? "pessoa" : "pessoas"}
           </span>
         </div>

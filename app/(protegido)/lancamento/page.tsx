@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { Alerta } from "@/components/alerta";
 import { AtualizacaoAutomatica } from "@/components/atualizacao-automatica";
 import { AvisoSupabase } from "@/components/aviso-supabase";
+import {
+  CabecalhoPagina,
+  Cartao,
+  Pagina,
+  RotuloCartao,
+} from "@/components/ui/base";
+import { LinkBotao } from "@/components/ui/botao";
 import { ehAdmin, obterSessaoAtual, podeLancar } from "@/lib/auth/perfil";
 import {
   DIAS_SEMANA,
@@ -39,25 +46,19 @@ export default async function LancamentoPage({
     typeof dataParam === "string" && ehDataValida(dataParam) ? dataParam : null;
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-5 py-8">
-      <header className="flex flex-col gap-1">
-        <Link
-          href="/"
-          className="text-sm text-slate-600 underline underline-offset-4 dark:text-slate-400"
-        >
-          ← Voltar
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">
-          {podeEditar ? "Contagem do dia" : "Contagens do dia"}
-        </h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          {podeEditar
+    <Pagina largura="estreita">
+      <CabecalhoPagina
+        titulo={podeEditar ? "Lançar contagem" : "Contagens do dia"}
+        descricao={
+          podeEditar
             ? "Escolha a data. Cada horário é lançado separadamente, quando o culto terminar."
-            : "Escolha a data para consultar as contagens já lançadas."}
-        </p>
-      </header>
+            : "Escolha a data para consultar as contagens já lançadas."
+        }
+      />
 
-      <FormularioData dataInicial={dataSelecionada ?? hoje} hoje={hoje} />
+      <Cartao>
+        <FormularioData dataInicial={dataSelecionada ?? hoje} hoje={hoje} />
+      </Cartao>
 
       {dataSelecionada ? (
         <Horarios
@@ -68,7 +69,7 @@ export default async function LancamentoPage({
       ) : (
         <ReferenciaHorarios />
       )}
-    </main>
+    </Pagina>
   );
 }
 
@@ -91,12 +92,9 @@ async function Horarios({
 
   if (error) {
     return (
-      <p
-        role="alert"
-        className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200"
-      >
+      <Alerta tom="erro">
         Não foi possível carregar os horários dessa data.
-      </p>
+      </Alerta>
     );
   }
 
@@ -140,25 +138,25 @@ async function Horarios({
   const temEvento = horarios.some((h) => h.ehEvento);
 
   return (
-    <section className="flex flex-col gap-3">
+    <section className="flex flex-col gap-4">
       <AtualizacaoAutomatica />
 
-      <h2 className="text-sm font-medium">{formatarDataLonga(data)}</h2>
+      <h2 className="text-base font-semibold first-letter:uppercase">
+        {formatarDataLonga(data)}
+      </h2>
 
-      <div className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Total do dia
-        </p>
-        <p className="mt-0.5 flex items-baseline gap-1.5">
-          <span className="text-4xl font-semibold tabular-nums tracking-tight">
+      <Cartao>
+        <RotuloCartao>Total do dia</RotuloCartao>
+        <p className="mt-2 flex items-baseline gap-1.5">
+          <span className="text-4xl font-bold tabular-nums tracking-tight">
             {total}
           </span>
-          <span className="text-sm text-slate-500 dark:text-slate-400">
+          <span className="text-sm text-texto-3">
             {total === 1 ? "pessoa" : "pessoas"}
           </span>
         </p>
 
-        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
+        <p className="mt-2 text-xs text-texto-3">
           {lancados} de {horarios.length}{" "}
           {horarios.length === 1 ? "horário lançado" : "horários lançados"}
           {pendentes > 0
@@ -169,27 +167,25 @@ async function Horarios({
         {/* Com evento especial no mesmo dia, um número só enganaria: ele não é
             comparável com outro domingo. A quebra deixa isso à vista. */}
         {temEvento ? (
-          <dl className="mt-3 flex flex-col gap-1 border-t border-slate-200 pt-3 text-xs dark:border-slate-800">
+          <dl className="mt-4 flex flex-col gap-1.5 border-t border-borda pt-4 text-sm">
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-slate-500 dark:text-slate-400">Cultos</dt>
+              <dt className="text-texto-2">Cultos</dt>
               <dd className="font-medium tabular-nums">{totalCultos}</dd>
             </div>
             <div className="flex items-center justify-between gap-3">
-              <dt className="text-slate-500 dark:text-slate-400">
-                Eventos especiais
-              </dt>
+              <dt className="text-texto-2">Eventos especiais</dt>
               <dd className="font-medium tabular-nums">{totalEventos}</dd>
             </div>
           </dl>
         ) : null}
 
         {pendentes > 0 ? (
-          <p className="mt-3 text-xs text-amber-700 dark:text-amber-400">
+          <p className="mt-3 text-xs text-aviso-texto">
             Ainda falta lançar {pendentes}{" "}
             {pendentes === 1 ? "horário" : "horários"} — o total vai subir.
           </p>
         ) : null}
-      </div>
+      </Cartao>
 
       <ul className="flex flex-col gap-3">
         {horarios.map((horario) => (
@@ -203,15 +199,12 @@ async function Horarios({
       </ul>
 
       {podeEditar ? (
-        <Link
-          href={`/evento-especial?data=${data}`}
-          className="flex h-11 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-        >
+        <LinkBotao href={`/evento-especial?data=${data}`} variante="secundario">
           + Evento especial nesta data
-        </Link>
+        </LinkBotao>
       ) : null}
 
-      <p className="text-xs text-slate-500 dark:text-slate-500">
+      <p className="text-xs text-texto-3">
         Esta tela se atualiza sozinha a cada 30 segundos — o que outra pessoa
         lançar aparece aqui sem precisar recarregar.
       </p>
@@ -229,45 +222,48 @@ function SemCultos({
   const diaSemana = DIAS_SEMANA[diaDaSemana(data)];
 
   return (
-    <section className="flex flex-col gap-3">
-      <h2 className="text-sm font-medium">{formatarDataLonga(data)}</h2>
-      <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
+    <section className="flex flex-col gap-4">
+      <h2 className="text-base font-semibold first-letter:uppercase">
+        {formatarDataLonga(data)}
+      </h2>
+      <Cartao className="text-sm">
         <p>
           Não há culto fixo em <strong className="font-medium">{diaSemana}</strong>.
         </p>
-        <p className="mt-2 text-slate-600 dark:text-slate-400">
+        <p className="mt-2 text-texto-2">
           Os horários fixos são domingo (8h, 10h e 18h) e quinta-feira (20h).
           {podeEditar
             ? " Para uma data fora da rotina, cadastre um evento especial."
             : " Nenhum evento especial foi cadastrado nesta data."}
         </p>
         {podeEditar ? (
-          <Link
+          <LinkBotao
             href={`/evento-especial?data=${data}`}
-            className="mt-3 flex h-11 items-center justify-center rounded-lg border border-slate-300 px-4 text-sm font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
+            variante="secundario"
+            className="mt-4"
           >
             Criar evento especial nesta data
-          </Link>
+          </LinkBotao>
         ) : null}
-      </div>
+      </Cartao>
     </section>
   );
 }
 
 function ReferenciaHorarios() {
   return (
-    <section className="rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
-      <h2 className="text-sm font-medium">Horários fixos</h2>
+    <Cartao as="section">
+      <RotuloCartao>Horários fixos</RotuloCartao>
       <dl className="mt-3 flex flex-col gap-2 text-sm">
         <div className="flex items-center justify-between gap-4">
-          <dt className="text-slate-600 dark:text-slate-400">Domingo</dt>
+          <dt className="text-texto-2">Domingo</dt>
           <dd className="font-medium">8h · 10h · 18h</dd>
         </div>
         <div className="flex items-center justify-between gap-4">
-          <dt className="text-slate-600 dark:text-slate-400">Quinta-feira</dt>
+          <dt className="text-texto-2">Quinta-feira</dt>
           <dd className="font-medium">20h</dd>
         </div>
       </dl>
-    </section>
+    </Cartao>
   );
 }

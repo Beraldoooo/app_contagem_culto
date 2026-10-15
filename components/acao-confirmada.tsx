@@ -3,6 +3,8 @@
 import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 
+import { classesBotao } from "@/components/ui/botao";
+
 /** Formato comum das Server Actions que passam por confirmação. */
 export type EstadoAcao = {
   erro?: string;
@@ -12,18 +14,18 @@ export type EstadoAcao = {
 type Tom = "neutro" | "perigo" | "atencao";
 
 const ESTILO_GATILHO: Record<Tom, string> = {
-  neutro:
-    "border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800",
-  atencao:
-    "border-amber-300 text-amber-800 hover:bg-amber-50 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950/40",
-  perigo:
-    "border-red-300 text-red-700 hover:bg-red-50 dark:border-red-900 dark:text-red-300 dark:hover:bg-red-950/40",
+  neutro: "border-borda-forte text-texto hover:bg-superficie-suave",
+  atencao: "border-aviso/40 text-aviso-texto hover:bg-aviso-suave",
+  perigo: "border-perigo/40 text-perigo-texto hover:bg-perigo-suave",
 };
 
 const ESTILO_CONFIRMAR: Record<Tom, string> = {
-  neutro: "bg-blue-600 hover:bg-blue-700",
-  atencao: "bg-amber-600 hover:bg-amber-700",
-  perigo: "bg-red-600 hover:bg-red-700",
+  neutro: classesBotao({ tamanho: "sm" }),
+  // O botão principal com a cor de aviso no lugar do azul.
+  atencao: classesBotao({ tamanho: "sm" })
+    .replace("bg-marca", "bg-aviso")
+    .replace("hover:bg-marca-forte", "hover:opacity-90"),
+  perigo: classesBotao({ variante: "perigo", tamanho: "sm" }),
 };
 
 function BotaoConfirmar({ tom, rotulo }: { tom: Tom; rotulo: string }) {
@@ -33,7 +35,7 @@ function BotaoConfirmar({ tom, rotulo }: { tom: Tom; rotulo: string }) {
     <button
       type="submit"
       disabled={pending}
-      className={`h-9 rounded-lg px-3 text-sm font-medium text-white transition disabled:opacity-60 ${ESTILO_CONFIRMAR[tom]}`}
+      className={ESTILO_CONFIRMAR[tom]}
     >
       {pending ? "Aplicando…" : rotulo}
     </button>
@@ -72,7 +74,7 @@ export function AcaoConfirmada({
     return (
       <p
         role="status"
-        className="rounded-lg bg-emerald-50 px-3 py-2 text-xs text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
+        className="rounded-campo bg-sucesso-suave px-3 py-2 text-xs text-sucesso-texto"
       >
         ✓ {estado.ok}
       </p>
@@ -86,12 +88,12 @@ export function AcaoConfirmada({
           type="button"
           disabled={desabilitado}
           onClick={() => setAberto(true)}
-          className={`h-9 rounded-lg border px-3 text-sm font-medium transition disabled:opacity-40 ${ESTILO_GATILHO[tom]}`}
+          className={`h-9 rounded-campo border bg-superficie px-3 text-sm font-medium transition disabled:opacity-40 ${ESTILO_GATILHO[tom]}`}
         >
           {rotulo}
         </button>
         {estado.erro ? (
-          <p role="alert" className="text-xs text-red-700 dark:text-red-400">
+          <p role="alert" className="text-xs text-perigo-texto">
             {estado.erro}
           </p>
         ) : null}
@@ -102,7 +104,7 @@ export function AcaoConfirmada({
   return (
     <form
       action={enviar}
-      className="flex flex-col gap-2 rounded-lg border border-slate-300 bg-slate-50 p-3 dark:border-slate-700 dark:bg-slate-950"
+      className="flex flex-col gap-2 rounded-campo border border-borda bg-superficie-suave p-3"
     >
       {Object.entries(campos).map(([nome, valor]) => (
         <input key={nome} type="hidden" name={nome} value={valor} />
@@ -110,13 +112,13 @@ export function AcaoConfirmada({
 
       <p className="text-sm font-medium">{pergunta}</p>
       {consequencia ? (
-        <p className="text-xs text-slate-600 dark:text-slate-400">
+        <p className="text-xs text-texto-2">
           {consequencia}
         </p>
       ) : null}
 
       {estado.erro ? (
-        <p role="alert" className="text-xs text-red-700 dark:text-red-400">
+        <p role="alert" className="text-xs text-perigo-texto">
           {estado.erro}
         </p>
       ) : null}
@@ -126,7 +128,7 @@ export function AcaoConfirmada({
         <button
           type="button"
           onClick={() => setAberto(false)}
-          className="h-9 rounded-lg px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-200 dark:text-slate-400 dark:hover:bg-slate-800"
+          className={classesBotao({ variante: "discreto", tamanho: "sm" })}
         >
           Cancelar
         </button>

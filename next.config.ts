@@ -14,6 +14,13 @@ const nextConfig: NextConfig = {
   env: {
     NEXT_PUBLIC_BUILD_ID: BUILD_ID,
   },
+  async redirects() {
+    return [
+      // "Tendência" virou "Relatórios". Mantém funcionando os atalhos e links
+      // antigos; os filtros na URL (?serie=…) vão junto.
+      { source: "/tendencia", destination: "/relatorios", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;

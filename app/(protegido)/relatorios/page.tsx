@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AvisoSupabase } from "@/components/aviso-supabase";
+import { CabecalhoPagina, Cartao, Pagina, RotuloCartao, Vazio } from "@/components/ui/base";
+import { classesBotao } from "@/components/ui/botao";
+import { FiltroSelect } from "@/components/ui/filtro";
 import { obterSessaoAtual } from "@/lib/auth/perfil";
 import {
   comInicialMaiuscula,
@@ -16,13 +18,13 @@ import { createClient } from "@/lib/supabase/server";
 
 import { Grafico, type Ponto } from "./grafico";
 
-export const metadata: Metadata = { title: "Tendência" };
+export const metadata: Metadata = { title: "Relatórios" };
 
 const LIMITE_PONTOS = 60;
 
-export default async function TendenciaPage({
+export default async function RelatoriosPage({
   searchParams,
-}: PageProps<"/tendencia">) {
+}: PageProps<"/relatorios">) {
   if (!hasSupabaseEnv()) return <AvisoSupabase />;
 
   const sessao = await obterSessaoAtual();
@@ -127,103 +129,83 @@ export default async function TendenciaPage({
       : (opcoes.find((o) => o.valor === serieValida)?.rotulo ?? "");
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-8 lg:max-w-4xl">
-      <header className="flex flex-col gap-1">
-        <Link
-          href="/"
-          className="text-sm text-slate-600 underline underline-offset-4 dark:text-slate-400"
-        >
-          ← Voltar
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Tendência</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          Evolução da frequência dos cultos fixos ao longo do tempo.
-        </p>
-      </header>
+    <Pagina>
+      <CabecalhoPagina
+        titulo="Relatórios"
+        descricao="Evolução da frequência dos cultos fixos ao longo do tempo."
+      />
 
       <form
         method="get"
-        action="/tendencia"
-        className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-end dark:border-slate-800 dark:bg-slate-900"
+        action="/relatorios"
+        className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center"
       >
-        <div className="flex flex-col gap-1.5 sm:flex-1">
-          <label
-            htmlFor="serie"
-            className="text-xs font-medium text-slate-600 dark:text-slate-400"
-          >
-            Mostrar
-          </label>
-          <select
-            id="serie"
-            name="serie"
-            defaultValue={serieValida}
-            className="h-11 rounded-lg border border-slate-300 bg-white px-2 text-sm dark:border-slate-700 dark:bg-slate-950"
-          >
-            <option value="total">Total do dia</option>
-            {opcoes.map((o) => (
-              <option key={o.valor} value={o.valor}>
-                {o.rotulo}
-              </option>
-            ))}
-          </select>
-        </div>
+        <FiltroSelect
+          rotulo="Mostrar"
+          id="serie"
+          name="serie"
+          defaultValue={serieValida}
+          className="sm:w-72"
+        >
+          <option value="total">Total do dia</option>
+          {opcoes.map((o) => (
+            <option key={o.valor} value={o.valor}>
+              {o.rotulo}
+            </option>
+          ))}
+        </FiltroSelect>
 
-        <label className="flex items-center gap-2.5 text-sm sm:h-11 sm:shrink-0">
+        <label className="flex h-11 items-center gap-2.5 rounded-campo border border-borda bg-superficie px-3.5 text-sm shadow-cartao">
           <input
             type="checkbox"
             name="eventos"
             value="1"
             defaultChecked={mostrarEventos}
-            className="size-4 rounded border-slate-300 accent-violet-600 dark:border-slate-700"
+            className="size-4 accent-evento"
           />
           Marcar eventos especiais
         </label>
 
-        <button
-          type="submit"
-          className="h-11 shrink-0 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition hover:bg-blue-700"
-        >
+        <button type="submit" className={classesBotao()}>
           Aplicar
         </button>
       </form>
 
+      <Resumo regulares={regulares} />
+
       {pontos.length === 0 ? (
-        <p className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400">
-          Ainda não há contagens suficientes para desenhar a tendência.
-        </p>
+        <Vazio>Ainda não há contagens suficientes para desenhar a tendência.</Vazio>
       ) : (
-        <section className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+        <Cartao as="section" className="flex flex-col gap-4">
           <div className="flex items-baseline justify-between gap-3">
-            <h2 className="text-sm font-medium">{rotuloSerie}</h2>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
+            <RotuloCartao>{rotuloSerie}</RotuloCartao>
+            <span className="text-xs text-texto-3">
               {regulares.size} {regulares.size === 1 ? "data" : "datas"}
             </span>
           </div>
 
           <Grafico pontos={pontos} mostrarEventos={mostrarEventos} />
 
-          <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600 dark:text-slate-400">
+          <div className="flex flex-wrap items-center gap-4 text-xs text-texto-2">
             <span className="flex items-center gap-1.5">
-              <span className="h-0.5 w-4 rounded bg-blue-500" />
+              <span className="h-0.5 w-4 rounded bg-marca" />
               Cultos fixos
             </span>
             {mostrarEventos && eventos.size > 0 ? (
               <span className="flex items-center gap-1.5">
-                <span className="size-2 rotate-45 bg-violet-400" />
+                <span className="size-2 rotate-45 bg-evento" />
                 Eventos especiais ({eventos.size})
               </span>
             ) : null}
           </div>
 
-          <p className="text-xs text-slate-500 dark:text-slate-500">
+          <p className="text-xs text-texto-3">
             Os eventos especiais são marcadores soltos — nunca entram na linha
             de tendência.
           </p>
-        </section>
+        </Cartao>
       )}
-
-      <Resumo regulares={regulares} />
-    </main>
+    </Pagina>
   );
 }
 
@@ -237,7 +219,7 @@ function Resumo({ regulares }: { regulares: Map<string, number> }) {
   const dataMaior = [...regulares.entries()].find(([, v]) => v === maior)?.[0];
 
   return (
-    <dl className="grid grid-cols-3 gap-2 text-center">
+    <dl className="grid grid-cols-3 gap-3 lg:gap-5">
       {[
         { rotulo: "Média", valor: media, extra: "" },
         {
@@ -247,22 +229,15 @@ function Resumo({ regulares }: { regulares: Map<string, number> }) {
         },
         { rotulo: "Menor", valor: menor, extra: "" },
       ].map((item) => (
-        <div
-          key={item.rotulo}
-          className="rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900"
-        >
-          <dt className="text-xs text-slate-500 dark:text-slate-400">
-            {item.rotulo}
-          </dt>
-          <dd className="mt-0.5 text-lg font-semibold tabular-nums">
+        <Cartao key={item.rotulo} className="p-4 lg:p-5">
+          <dt className="text-sm font-medium text-texto-2">{item.rotulo}</dt>
+          <dd className="mt-2 text-2xl font-bold tabular-nums lg:text-3xl">
             {item.valor}
           </dd>
           {item.extra ? (
-            <dd className="text-xs text-slate-500 dark:text-slate-400">
-              {item.extra}
-            </dd>
+            <dd className="mt-0.5 text-xs text-texto-3">{item.extra}</dd>
           ) : null}
-        </div>
+        </Cartao>
       ))}
     </dl>
   );

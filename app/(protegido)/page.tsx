@@ -1,6 +1,7 @@
-import Link from "next/link";
-
 import { AvisoSupabase } from "@/components/aviso-supabase";
+import { IconeMais } from "@/components/icones";
+import { CabecalhoPagina, Pagina } from "@/components/ui/base";
+import { LinkBotao } from "@/components/ui/botao";
 import { obterSessaoAtual, podeLancar, ROTULO_ROLE } from "@/lib/auth/perfil";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 
@@ -12,47 +13,25 @@ export default async function Home() {
   // O layout de (protegido) já garantiu sessão válida e status aprovado.
   const sessao = await obterSessaoAtual();
   const perfil = sessao?.perfil ?? null;
-  const lanca = podeLancar(perfil);
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-5 px-5 py-8">
-      <header className="flex flex-col gap-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Contagem Culto</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          {perfil ? `Você entrou como ${ROTULO_ROLE[perfil.role]}.` : ""}
-        </p>
-      </header>
+    <Pagina>
+      <CabecalhoPagina
+        titulo="Início"
+        descricao={perfil ? `Você entrou como ${ROTULO_ROLE[perfil.role]}.` : undefined}
+        acao={
+          podeLancar(perfil) ? (
+            <LinkBotao href="/lancamento" className="hidden sm:inline-flex">
+              <IconeMais tamanho={18} />
+              Lançar contagem
+            </LinkBotao>
+          ) : null
+        }
+      />
 
-      <ResumoDoDia />
-
-      <div className="flex flex-col gap-2">
-        <Link
-          href="/lancamento"
-          className="flex h-12 items-center justify-center rounded-xl bg-blue-600 px-4 text-base font-medium text-white transition hover:bg-blue-700"
-        >
-          {lanca ? "Lançar contagem" : "Ver contagens"}
-        </Link>
-        {lanca ? (
-          <Link
-            href="/evento-especial"
-            className="flex h-12 items-center justify-center rounded-xl border border-slate-300 px-4 text-base font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-          >
-            Novo evento especial
-          </Link>
-        ) : null}
-        <Link
-          href="/tendencia"
-          className="flex h-12 items-center justify-center rounded-xl border border-slate-300 px-4 text-base font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-        >
-          Tendência
-        </Link>
-        <Link
-          href="/historico"
-          className="flex h-12 items-center justify-center rounded-xl border border-slate-300 px-4 text-base font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-        >
-          Histórico
-        </Link>
+      <div className="grid gap-6 lg:grid-cols-2">
+        <ResumoDoDia />
       </div>
-    </main>
+    </Pagina>
   );
 }

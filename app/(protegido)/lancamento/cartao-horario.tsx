@@ -4,6 +4,8 @@ import { useActionState, useId } from "react";
 import { useFormStatus } from "react-dom";
 
 import { AcaoConfirmada } from "@/components/acao-confirmada";
+import { classesCampo, Selo as Etiqueta } from "@/components/ui/base";
+import { classesBotao } from "@/components/ui/botao";
 import { formatarHorario } from "@/lib/datas";
 
 import {
@@ -27,7 +29,7 @@ function BotaoSalvar({ jaLancado }: { jaLancado: boolean }) {
     <button
       type="submit"
       disabled={pending}
-      className="h-11 shrink-0 rounded-lg bg-blue-600 px-4 text-sm font-medium text-white transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60"
+      className={classesBotao()}
     >
       {pending ? "Salvando…" : jaLancado ? "Atualizar" : "Salvar"}
     </button>
@@ -37,15 +39,13 @@ function BotaoSalvar({ jaLancado }: { jaLancado: boolean }) {
 function Cabecalho({ horario }: { horario: HorarioDoDia }) {
   return (
     <div className="flex min-w-0 flex-col gap-0.5">
-      <span className="flex items-center gap-2 text-base font-medium">
+      <span className="flex items-center gap-2 text-lg font-semibold">
         {formatarHorario(horario.horario)}
         {horario.ehEvento ? (
-          <span className="rounded-full bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-800 dark:bg-violet-950/60 dark:text-violet-300">
-            Evento
-          </span>
+          <Etiqueta tom="evento">Evento</Etiqueta>
         ) : null}
       </span>
-      <span className="truncate text-xs text-slate-500 dark:text-slate-400">
+      <span className="truncate text-sm text-texto-2">
         {horario.nome}
       </span>
     </div>
@@ -56,13 +56,9 @@ function Selo({ quantidade }: { quantidade: number | null }) {
   // Mostra o número que está NO BANCO. O campo abaixo é o que a pessoa está
   // digitando; se outro aparelho lançar este horário, o selo entrega a verdade.
   return quantidade !== null ? (
-    <span className="shrink-0 rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-medium tabular-nums text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
-      ✓ {quantidade}
-    </span>
+    <Etiqueta tom="sucesso">✓ {quantidade}</Etiqueta>
   ) : (
-    <span className="shrink-0 rounded-full bg-amber-100 px-2.5 py-1 text-xs font-medium text-amber-900 dark:bg-amber-950/60 dark:text-amber-300">
-      pendente
-    </span>
+    <Etiqueta tom="aviso">pendente</Etiqueta>
   );
 }
 
@@ -90,22 +86,20 @@ export function CartaoHorario({
   const campoId = useId();
   const jaLancado = horario.quantidade !== null;
 
-  const borda = jaLancado
-    ? "border-emerald-300 dark:border-emerald-900"
-    : "border-slate-200 dark:border-slate-800";
+  const borda = jaLancado ? "border-sucesso/40" : "border-borda";
 
   if (!podeEditar) {
     return (
       <li
-        className={`flex items-center justify-between gap-3 rounded-xl border bg-white p-4 dark:bg-slate-900 ${borda}`}
+        className={`flex items-center justify-between gap-3 rounded-cartao border bg-superficie p-5 shadow-cartao ${borda}`}
       >
         <Cabecalho horario={horario} />
         {jaLancado ? (
           <span className="shrink-0 text-right">
-            <span className="block text-lg font-semibold">
+            <span className="block text-2xl font-bold tabular-nums">
               {horario.quantidade}
             </span>
-            <span className="block text-xs text-slate-500 dark:text-slate-400">
+            <span className="block text-xs text-texto-3">
               pessoas
             </span>
           </span>
@@ -118,7 +112,7 @@ export function CartaoHorario({
 
   return (
     <li
-      className={`flex flex-col gap-3 rounded-xl border bg-white p-4 dark:bg-slate-900 ${borda}`}
+      className={`flex flex-col gap-4 rounded-cartao border bg-superficie p-5 shadow-cartao ${borda}`}
     >
       <div className="flex items-start justify-between gap-3">
         <Cabecalho horario={horario} />
@@ -142,18 +136,18 @@ export function CartaoHorario({
             required
             placeholder="0"
             defaultValue={horario.quantidade ?? ""}
-            className="h-11 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-3 text-base outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700 dark:bg-slate-950"
+            className={`${classesCampo} text-lg font-semibold tabular-nums`}
           />
           <BotaoSalvar jaLancado={jaLancado} />
         </div>
 
         {estado.erro ? (
-          <p role="alert" className="text-xs text-red-700 dark:text-red-400">
+          <p role="alert" className="text-xs text-perigo-texto">
             {estado.erro}
           </p>
         ) : null}
         {estado.ok ? (
-          <p role="status" className="text-xs text-emerald-700 dark:text-emerald-400">
+          <p role="status" className="text-xs text-sucesso-texto">
             ✓ {estado.ok}
           </p>
         ) : null}

@@ -1,14 +1,22 @@
+import { IconeSair } from "@/components/icones";
+import { classesBotao } from "@/components/ui/botao";
 import { sair } from "@/lib/auth/acoes";
 
-export function BotaoSair({ variante = "texto" }: { variante?: "texto" | "solido" }) {
+export function BotaoSair({
+  variante = "menu",
+}: {
+  /** `menu`: linha discreta com ícone (menu lateral). `solido`: botão cheio. */
+  variante?: "menu" | "solido";
+}) {
   const classe =
     variante === "solido"
-      ? "h-11 rounded-lg bg-slate-900 px-4 text-base font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-      : "text-sm font-medium text-slate-600 underline underline-offset-4 transition hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-100";
+      ? classesBotao({ variante: "secundario", larguraTotal: true })
+      : "flex h-10 w-full items-center gap-3 rounded-campo px-3 text-sm font-medium text-texto-2 transition hover:bg-superficie-suave hover:text-perigo-texto";
 
   return (
     <form action={sair}>
       <button type="submit" className={classe}>
+        <IconeSair tamanho={18} />
         Sair
       </button>
     </form>

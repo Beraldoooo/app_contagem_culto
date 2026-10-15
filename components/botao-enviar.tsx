@@ -2,6 +2,8 @@
 
 import { useFormStatus } from "react-dom";
 
+import { classesBotao } from "@/components/ui/botao";
+
 export function BotaoEnviar({
   children,
   carregando,
@@ -15,7 +17,7 @@ export function BotaoEnviar({
     <button
       type="submit"
       disabled={pending}
-      className="h-11 rounded-lg bg-blue-600 px-4 text-base font-medium text-white transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60"
+      className={classesBotao({ larguraTotal: true })}
     >
       {pending ? (carregando ?? "Aguarde…") : children}
     </button>

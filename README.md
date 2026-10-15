@@ -5,8 +5,9 @@ cultos e eventos da igreja. A especificação completa está em [CLAUDE.md](./CL
 
 **No ar:** https://app-contagem-culto.vercel.app
 
-> **Estado atual:** esqueleto. Só a infraestrutura está pronta — nenhuma regra
-> de negócio (cultos, lançamentos, autenticação, comparativos) foi implementada.
+> **Estado atual:** MVP completo e publicado. Banco de produção limpo (sem dados
+> de teste) e pronto para as contagens reais. Detalhes em
+> [Próximos passos](#próximos-passos).
 
 ## Stack
 
@@ -133,12 +134,15 @@ app/                  rotas (App Router)
   layout.tsx          metadata, viewport/theme-color, registro do SW
   manifest.ts         web app manifest -> /manifest.webmanifest
   (auth)/             telas públicas: /login e /cadastro
-  (protegido)/        telas internas; o layout barra pendente/banido
+  (protegido)/        telas internas; o layout barra pendente/banido e
+                      monta o menu lateral (desktop) e a barra inferior (celular)
     admin/usuarios/   painel de gestão de usuários (só admin_geral)
     lancamento/       escolha da data, cards por horário e lançamento
     evento-especial/  cadastro de evento avulso, com vários horários
     historico/        datas registradas, com filtros e paginação
-    tendencia/        gráfico de linha da frequência, por horário ou total
+    configuracoes/    preferências do aparelho (tema escuro ou claro)
+    relatorios/       gráfico de linha da frequência, por horário ou total
+                      (/tendencia redireciona para cá — ver next.config.ts)
   aguardando/         "sua conta aguarda aprovação"
   acesso-negado/      conta banida — encerra a sessão ao abrir
   link-invalido/      link de e-mail expirado, incompleto ou de outro aparelho
@@ -148,7 +152,14 @@ app/                  rotas (App Router)
   icon.png            favicon / ícone da aba
   apple-icon.png      ícone do iOS (apple-touch-icon)
 components/           componentes de UI compartilhados
+  ui/base.tsx         Cartao, Selo, Pagina, CabecalhoPagina, classes de campo
+  ui/botao.tsx        Botao, LinkBotao e classesBotao (principal/secundário/…)
+  ui/filtro.tsx       filtros no formato "Rótulo: Valor ▾"
+  ui/tela-centralizada.tsx  telas avulsas (aguardando, 404, offline…)
+  navegacao/          menu lateral, barra inferior e a lista única de itens
+  icones.tsx          ícones SVG próprios (sem biblioteca)
 lib/datas.ts          dia da semana e formatação, sem depender de fuso
+lib/tema.ts           tema escuro/claro: padrão, chave salva e script do <head>
 lib/comparativo.ts    compara o culto com a mesma ocorrência da semana anterior
 lib/auth/
   acoes.ts            Server Actions: entrar, cadastrar, sair
@@ -319,6 +330,34 @@ desse tamanho. O ponto de atenção é o Supabase: projetos gratuitos **pausam
 após alguns dias sem acesso** — os dados não somem, mas alguém precisa reativar
 pelo painel. Com uso semanal isso não acontece.
 
+## Navegação e padrão visual
+
+- **Desktop (a partir de 1024 px):** menu lateral fixo com Início, Lançar
+  contagem, Histórico, Eventos especiais e Relatórios; o grupo
+  "Administração" (Usuários) só aparece para o Administrador Geral. No pé do
+  menu ficam o e-mail, o papel e o botão Sair.
+- **Celular:** barra fixa embaixo — Início · Histórico · **Lançar** ·
+  Relatórios · Mais. "Lançar" é o botão redondo em destaque no centro; "Mais"
+  abre um painel com Eventos especiais, Usuários (admin) e a conta.
+- **Papéis:** o Visualizador não vê Lançar contagem nem Eventos especiais (e a
+  barra dele fica sem o botão central). Esconder no menu é só conforto: quem
+  barra de verdade são as checagens no servidor e a RLS.
+- Os itens vêm de uma lista única (`components/navegacao/itens.ts`), usada
+  pelos dois menus.
+
+O padrão visual fica em `app/globals.css`, como tokens: cores (`fundo`,
+`superficie`, `borda`, `texto`, `texto-2`, `marca`, `sucesso`, `aviso`,
+`perigo`, `evento`), cantos (`rounded-campo`, `rounded-cartao`) e sombras
+(`shadow-cartao`). As telas usam esses nomes (`bg-superficie`,
+`text-texto-2`…) em vez de cores soltas, e o tema escuro é só a redefinição
+das variáveis em `:root[data-tema="escuro"]`.
+
+**Tema:** o padrão é o **escuro**. Em **Configurações** (pé do menu lateral;
+no celular, dentro de "Mais") cada pessoa escolhe Escuro ou Claro. A escolha
+fica salva no aparelho (`localStorage`), não na conta, e um script no `<head>`
+(`lib/tema.ts`) aplica o tema antes da tela ser pintada — sem piscar branco. Para trocar a cor de destaque, mude `--marca` (e as variações
+`--marca-forte`, `--marca-suave`, `--marca-texto`) nos dois blocos.
+
 ## Estados de carregamento e erro
 
 Cada rota com dados tem seu `loading.tsx` — esqueletos cinzas no lugar do
@@ -361,15 +400,30 @@ apagar histórico não é.
    comparativo quanto a linha do gráfico usam apenas `culto_fixo`; eventos
    especiais entram no gráfico como marcadores separados e opcionais.
 
-A especificação do `CLAUDE.md` está coberta. Antes do uso real, falta:
+A especificação do `CLAUDE.md` está coberta.
 
-7. **Limpar os dados de teste** do banco — hoje há 86 horários e 82 contagens
-   fictícias, criados durante a construção.
-8. **Recuperação de senha** ("esqueci minha senha") — não existe; hoje a saída
-   é um `update` manual no SQL Editor.
-9. **Publicar** na Vercel (ver [Deploy](#deploy-na-vercel)) — o app só roda no
-   computador de quem desenvolve.
-10. Revisar detalhes de domínio e o acabamento visual.
+7. ~~Limpar os dados de teste do banco~~ — feito (conferido em 15/10/2026:
+   0 horários, 0 contagens e 3 usuários).
+8. ~~Publicar na Vercel~~ — feito: https://app-contagem-culto.vercel.app
+
+Antes do uso real, falta:
+
+9. **Recuperação de senha** ("esqueci minha senha") — não existe; hoje a saída
+   é trocar a senha pelo SQL Editor:
+
+   ```sql
+   update auth.users
+      set encrypted_password = extensions.crypt('SENHA-NOVA', extensions.gen_salt('bf'))
+    where email = 'email@exemplo.com';
+   ```
+
+10. Conferir a configuração do Supabase em produção (Site URL, Redirect URLs e
+    confirmação de e-mail — ver [Deploy](#deploy-na-vercel)).
+11. ~~Redesenho da estrutura e da navegação~~ — feito: menu lateral no
+    desktop, barra inferior no celular, padrão visual único em todas as telas
+    e "Tendência" renomeada para "Relatórios".
+12. **Conteúdo do painel inicial** (dashboard) — próxima etapa do redesenho.
+13. Revisar detalhes de domínio.
 
 Fase 2 do escopo original (envio automático do resumo para o WhatsApp) segue
 adiada, como previsto desde o início.

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { Alerta } from "@/components/alerta";
 import { AvisoSupabase } from "@/components/aviso-supabase";
+import { CabecalhoPagina, Pagina, Selo } from "@/components/ui/base";
 import { obterSessaoAtual } from "@/lib/auth/perfil";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
@@ -39,27 +40,14 @@ export default async function UsuariosPage() {
   const banidos = usuarios.filter((u) => u.status === "banido");
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col gap-6 px-5 py-8 lg:max-w-5xl">
-      <header className="flex flex-col gap-1">
-        <Link
-          href="/"
-          className="text-sm text-slate-600 underline underline-offset-4 dark:text-slate-400"
-        >
-          ← Voltar
-        </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Usuários</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400">
-          Aprove quem se cadastrou, defina papéis e controle o acesso.
-        </p>
-      </header>
+    <Pagina>
+      <CabecalhoPagina
+        titulo="Usuários"
+        descricao="Aprove quem se cadastrou, defina papéis e controle o acesso."
+      />
 
       {error ? (
-        <p
-          role="alert"
-          className="rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-800 dark:border-red-900/60 dark:bg-red-950/40 dark:text-red-200"
-        >
-          Não foi possível carregar a lista de usuários.
-        </p>
+        <Alerta tom="erro">Não foi possível carregar a lista de usuários.</Alerta>
       ) : null}
 
       <Secao
@@ -102,7 +90,7 @@ export default async function UsuariosPage() {
           ))}
         </Secao>
       ) : null}
-    </main>
+    </Pagina>
   );
 }
 
@@ -121,25 +109,17 @@ function Secao({
 }) {
   return (
     <section className="flex flex-col gap-3">
-      <h2 className="flex items-center gap-2 text-sm font-medium">
+      <h2 className="flex items-center gap-2 text-base font-semibold">
         {titulo}
         {contagem > 0 ? (
-          <span
-            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-              destaque
-                ? "bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300"
-                : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
-            }`}
-          >
-            {contagem}
-          </span>
+          <Selo tom={destaque ? "aviso" : "neutro"}>{contagem}</Selo>
         ) : null}
       </h2>
 
       {contagem === 0 ? (
-        <p className="text-sm text-slate-500 dark:text-slate-400">{vazio}</p>
+        <p className="text-sm text-texto-3">{vazio}</p>
       ) : (
-        <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">{children}</ul>
+        <ul className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">{children}</ul>
       )}
     </section>
   );

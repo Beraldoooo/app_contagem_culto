@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
+import { COR_BARRA, SCRIPT_TEMA, TEMA_PADRAO } from "@/lib/tema";
 
 import "./globals.css";
 
@@ -30,10 +31,9 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#2563eb" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
-  ],
+  // Mesma cor da faixa do topo, para a barra de status do celular emendar com
+  // o app. O script de tema troca para a cor do claro quando for o caso.
+  themeColor: COR_BARRA[TEMA_PADRAO],
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -44,9 +44,14 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="pt-BR"
       className={`${geistSans.variable} h-full antialiased`}
+      data-tema={TEMA_PADRAO}
+      // O script abaixo pode trocar o data-tema antes de o React hidratar.
       suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col bg-background text-foreground">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: SCRIPT_TEMA }} />
+      </head>
+      <body className="flex min-h-full flex-col bg-fundo text-texto">
         {children}
         <ServiceWorkerRegister />
       </body>
