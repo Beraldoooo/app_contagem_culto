@@ -140,6 +140,7 @@ app/                  rotas (App Router)
     lancamento/       escolha da data, cards por horário e lançamento
     evento-especial/  cadastro de evento avulso, com vários horários
     historico/        datas registradas, com filtros e paginação
+    configuracoes/    preferências do aparelho (tema escuro ou claro)
     relatorios/       gráfico de linha da frequência, por horário ou total
                       (/tendencia redireciona para cá — ver next.config.ts)
   aguardando/         "sua conta aguarda aprovação"
@@ -158,6 +159,7 @@ components/           componentes de UI compartilhados
   navegacao/          menu lateral, barra inferior e a lista única de itens
   icones.tsx          ícones SVG próprios (sem biblioteca)
 lib/datas.ts          dia da semana e formatação, sem depender de fuso
+lib/tema.ts           tema escuro/claro: padrão, chave salva e script do <head>
 lib/comparativo.ts    compara o culto com a mesma ocorrência da semana anterior
 lib/auth/
   acoes.ts            Server Actions: entrar, cadastrar, sair
@@ -347,8 +349,13 @@ O padrão visual fica em `app/globals.css`, como tokens: cores (`fundo`,
 `superficie`, `borda`, `texto`, `texto-2`, `marca`, `sucesso`, `aviso`,
 `perigo`, `evento`), cantos (`rounded-campo`, `rounded-cartao`) e sombras
 (`shadow-cartao`). As telas usam esses nomes (`bg-superficie`,
-`text-texto-2`…) em vez de cores soltas, e o modo escuro é só a redefinição
-das variáveis. Para trocar a cor de destaque, mude `--marca` (e as variações
+`text-texto-2`…) em vez de cores soltas, e o tema escuro é só a redefinição
+das variáveis em `:root[data-tema="escuro"]`.
+
+**Tema:** o padrão é o **escuro**. Em **Configurações** (pé do menu lateral;
+no celular, dentro de "Mais") cada pessoa escolhe Escuro ou Claro. A escolha
+fica salva no aparelho (`localStorage`), não na conta, e um script no `<head>`
+(`lib/tema.ts`) aplica o tema antes da tela ser pintada — sem piscar branco. Para trocar a cor de destaque, mude `--marca` (e as variações
 `--marca-forte`, `--marca-suave`, `--marca-texto`) nos dois blocos.
 
 ## Estados de carregamento e erro

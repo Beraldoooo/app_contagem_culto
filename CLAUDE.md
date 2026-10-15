@@ -37,6 +37,8 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
       "Lançar" em destaque, menu respeitando papéis, padrão visual único (tokens em `app/globals.css`,
       componentes em `components/ui/`) aplicado a todas as telas; "Tendência" virou "Relatórios" (`/relatorios`,
       com `/tendencia` redirecionando)
+- [x] Tema escuro como padrão e tela **Configurações** (`/configuracoes`) para escolher Escuro ou Claro, salvo no
+      aparelho (`lib/tema.ts`, `components/seletor-tema.tsx`)
 
 ### Convenções de interface
 - Use os tokens de `app/globals.css` (`bg-superficie`, `text-texto-2`, `border-borda`, `bg-marca`, `rounded-cartao`…)

@@ -8,8 +8,8 @@
  * de destaque ou ajustar o modo escuro é mexer só aqui.
  */
 :root {
-  /* campos nativos (data, select) acompanham o tema */
-  color-scheme: light dark;
+  /* tema claro; o escuro (padrão) redefine as variáveis mais abaixo */
+  color-scheme: light;
 
   /* superfícies */
   --fundo: #f4f5f7;
@@ -47,39 +47,44 @@
   --sombra-flutuante: 0 8px 24px rgb(16 24 40 / 0.12);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --fundo: #0b0d12;
-    --superficie: #14171e;
-    --superficie-suave: #1b1f28;
-    --borda: #242934;
-    --borda-forte: #343a47;
+/*
+ * Tema escuro — o padrão. O <html> já sai do servidor com data-tema="escuro";
+ * o script no <head> do layout troca para "claro" se a pessoa escolheu isso
+ * em Configurações (salvo no aparelho).
+ */
+:root[data-tema="escuro"] {
+  color-scheme: dark;
 
-    --texto: #eef0f4;
-    --texto-2: #a3a9b5;
-    --texto-3: #737a87;
+  --fundo: #0b0d12;
+  --superficie: #14171e;
+  --superficie-suave: #1b1f28;
+  --borda: #242934;
+  --borda-forte: #343a47;
 
-    --marca: #5b8bff;
-    --marca-forte: #7aa2ff;
-    --marca-suave: rgb(91 139 255 / 0.14);
-    --marca-texto: #8fb0ff;
+  --texto: #eef0f4;
+  --texto-2: #a3a9b5;
+  --texto-3: #737a87;
 
-    --sucesso: #22c55e;
-    --sucesso-suave: rgb(34 197 94 / 0.14);
-    --sucesso-texto: #4ade80;
-    --aviso: #f59e0b;
-    --aviso-suave: rgb(245 158 11 / 0.14);
-    --aviso-texto: #fbbf24;
-    --perigo: #ef4444;
-    --perigo-suave: rgb(239 68 68 / 0.14);
-    --perigo-texto: #f87171;
-    --evento: #a78bfa;
-    --evento-suave: rgb(139 92 246 / 0.18);
-    --evento-texto: #c4b5fd;
+  --marca: #5b8bff;
+  --marca-forte: #7aa2ff;
+  --marca-suave: rgb(91 139 255 / 0.14);
+  --marca-texto: #8fb0ff;
 
-    --sombra-cartao: 0 1px 2px rgb(0 0 0 / 0.3);
-    --sombra-flutuante: 0 8px 24px rgb(0 0 0 / 0.5);
-  }
+  --sucesso: #22c55e;
+  --sucesso-suave: rgb(34 197 94 / 0.14);
+  --sucesso-texto: #4ade80;
+  --aviso: #f59e0b;
+  --aviso-suave: rgb(245 158 11 / 0.14);
+  --aviso-texto: #fbbf24;
+  --perigo: #ef4444;
+  --perigo-suave: rgb(239 68 68 / 0.14);
+  --perigo-texto: #f87171;
+  --evento: #a78bfa;
+  --evento-suave: rgb(139 92 246 / 0.18);
+  --evento-texto: #c4b5fd;
+
+  --sombra-cartao: 0 1px 2px rgb(0 0 0 / 0.3);
+  --sombra-flutuante: 0 8px 24px rgb(0 0 0 / 0.5);
 }
 
 @theme inline {

@@ -40,6 +40,7 @@ export function MenuLateral({
   const itens = itensVisiveis(permissoes);
   const principais = itens.filter((i) => i.grupo === "principal");
   const administracao = itens.filter((i) => i.grupo === "administracao");
+  const daConta = itens.filter((i) => i.grupo === "conta");
 
   return (
     <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-borda bg-superficie px-4 py-6 lg:flex">
@@ -72,7 +73,16 @@ export function MenuLateral({
         ) : null}
       </nav>
 
-      <div className="border-t border-borda pt-4">{conta}</div>
+      <div className="flex flex-col gap-3 border-t border-borda pt-4">
+        <ul className="flex flex-col gap-1">
+          {daConta.map((item) => (
+            <li key={item.href}>
+              <LinkMenu item={item} ativo={estaAtivo(pathname, item.href)} />
+            </li>
+          ))}
+        </ul>
+        {conta}
+      </div>
     </aside>
   );
 }

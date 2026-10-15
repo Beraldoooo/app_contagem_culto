@@ -1,4 +1,5 @@
 import {
+  IconeConfiguracoes,
   IconeEvento,
   IconeHistorico,
   IconeInicio,
@@ -22,7 +23,8 @@ export type ItemMenu = {
   /** Rótulo da barra inferior do celular, onde o espaço é curto. */
   rotuloCurto: string;
   icone: Icone;
-  grupo: "principal" | "administracao";
+  /** "conta" fica no pé do menu lateral, junto do e-mail e do Sair. */
+  grupo: "principal" | "administracao" | "conta";
   visivel: (p: Permissoes) => boolean;
 };
 
@@ -79,6 +81,14 @@ export const ITENS_MENU: ItemMenu[] = [
     icone: IconeUsuarios,
     grupo: "administracao",
     visivel: (p) => p.admin,
+  },
+  {
+    href: "/configuracoes",
+    rotulo: "Configurações",
+    rotuloCurto: "Configurações",
+    icone: IconeConfiguracoes,
+    grupo: "conta",
+    visivel: () => true,
   },
 ];
 
