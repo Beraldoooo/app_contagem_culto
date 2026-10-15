@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# backups pontuais de dados do banco — ficam só na máquina
+backup-*.json
