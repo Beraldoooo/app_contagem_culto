@@ -1,6 +1,8 @@
 "use client";
 
-import Link from "next/link";
+import { IconeAlerta } from "@/components/icones";
+import { Botao, LinkBotao } from "@/components/ui/botao";
+import { TelaCentralizada } from "@/components/ui/tela-centralizada";
 
 /**
  * Tela mostrada quando algo quebra. Fala do que a pessoa pode fazer, não do
@@ -16,37 +18,21 @@ export function ErroAmigavel({
   aoTentarNovamente?: () => void;
 }) {
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-4 px-5 py-10">
-      <span
-        aria-hidden
-        className="flex size-11 items-center justify-center rounded-full bg-amber-100 text-xl dark:bg-amber-950/60"
-      >
-        ⚠️
-      </span>
-      <h1 className="text-xl font-semibold tracking-tight">{titulo}</h1>
-      <p className="text-sm text-slate-600 dark:text-slate-400">{descricao}</p>
-
+    <TelaCentralizada icone={IconeAlerta} tom="aviso" titulo={titulo} descricao={descricao}>
       <div className="flex flex-col gap-2">
         {aoTentarNovamente ? (
-          <button
-            type="button"
-            onClick={aoTentarNovamente}
-            className="h-11 rounded-lg bg-blue-600 px-4 text-base font-medium text-white transition hover:bg-blue-700"
-          >
+          <Botao onClick={aoTentarNovamente} larguraTotal>
             Tentar de novo
-          </button>
+          </Botao>
         ) : null}
-        <Link
-          href="/"
-          className="flex h-11 items-center justify-center rounded-lg border border-slate-300 px-4 text-base font-medium transition hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
-        >
+        <LinkBotao href="/" variante="secundario" larguraTotal>
           Voltar ao início
-        </Link>
+        </LinkBotao>
       </div>
 
-      <p className="text-xs text-slate-500 dark:text-slate-500">
+      <p className="text-xs text-texto-3">
         Se continuar acontecendo, avise o responsável pelo aplicativo.
       </p>
-    </main>
+    </TelaCentralizada>
   );
 }

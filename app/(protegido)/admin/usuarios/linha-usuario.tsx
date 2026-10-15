@@ -5,6 +5,7 @@ import { useState } from "react";
 import type { Profile, UserRole } from "@/types/database";
 
 import { AcaoConfirmada } from "@/components/acao-confirmada";
+import { classesCampo, Selo } from "@/components/ui/base";
 import {
   alterarPapel,
   aprovarUsuario,
@@ -28,21 +29,14 @@ function Etiqueta({
   children: React.ReactNode;
   tom: "verde" | "ambar" | "vermelho" | "cinza";
 }) {
-  const estilos = {
-    verde:
-      "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300",
-    ambar: "bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-300",
-    vermelho: "bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300",
-    cinza: "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-300",
+  const tons = {
+    verde: "sucesso",
+    ambar: "aviso",
+    vermelho: "perigo",
+    cinza: "neutro",
   } as const;
 
-  return (
-    <span
-      className={`rounded-full px-2 py-0.5 text-xs font-medium ${estilos[tom]}`}
-    >
-      {children}
-    </span>
-  );
+  return <Selo tom={tons[tom]}>{children}</Selo>;
 }
 
 export function LinhaUsuario({
@@ -60,9 +54,9 @@ export function LinhaUsuario({
   const viraAdmin = papelEscolhido === "admin_geral";
 
   return (
-    <li className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900">
+    <li className="flex flex-col gap-4 rounded-cartao border border-borda bg-superficie p-5 shadow-cartao">
       <div className="flex flex-col gap-1.5">
-        <span className="truncate text-sm font-medium">{perfil.email}</span>
+        <span className="truncate text-[15px] font-semibold">{perfil.email}</span>
         <div className="flex flex-wrap items-center gap-1.5">
           <Etiqueta tom={perfil.role === "admin_geral" ? "verde" : "cinza"}>
             {ROTULO_ROLE[perfil.role]}
@@ -78,7 +72,7 @@ export function LinhaUsuario({
       </div>
 
       {souEu ? (
-        <p className="text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-xs text-texto-3">
           Você não pode alterar o próprio acesso. Outro Administrador Geral faz
           essa mudança — assim ninguém se tranca para fora sozinho.
         </p>
@@ -100,7 +94,7 @@ export function LinhaUsuario({
           <div className="flex flex-col gap-1.5">
             <label
               htmlFor={`papel-${perfil.id}`}
-              className="text-xs font-medium text-slate-600 dark:text-slate-400"
+              className="text-xs font-medium text-texto-2"
             >
               Papel
             </label>
@@ -108,7 +102,7 @@ export function LinhaUsuario({
               id={`papel-${perfil.id}`}
               value={papelEscolhido}
               onChange={(e) => setPapelEscolhido(e.target.value as UserRole)}
-              className="h-10 rounded-lg border border-slate-300 bg-white px-2 text-sm dark:border-slate-700 dark:bg-slate-950"
+              className={`${classesCampo} h-10 text-sm`}
             >
               {PAPEIS.map((papel) => (
                 <option key={papel} value={papel}>

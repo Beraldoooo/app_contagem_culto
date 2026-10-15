@@ -1,17 +1,22 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { AvisoSupabase } from "@/components/aviso-supabase";
-import { BotaoSair } from "@/components/botao-sair";
-import { ehAdmin, obterSessaoAtual, ROTULO_ROLE } from "@/lib/auth/perfil";
+import { Marca } from "@/components/marca";
+import { BarraInferior } from "@/components/navegacao/barra-inferior";
+import { BlocoConta } from "@/components/navegacao/bloco-conta";
+import type { Permissoes } from "@/components/navegacao/itens";
+import { MenuLateral } from "@/components/navegacao/menu-lateral";
+import { ehAdmin, obterSessaoAtual, podeLancar, ROTULO_ROLE } from "@/lib/auth/perfil";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 
 /**
- * Portaria das telas internas.
+ * Portaria e moldura das telas internas.
  *
  * O proxy já barrou quem não tem sessão; aqui checamos o *status* do perfil,
  * que exige uma consulta ao banco. A RLS continua sendo a garantia real: um
  * usuário pendente ou banido não lê dado nenhum mesmo que chegue à tela.
+ *
+ * Desktop: menu lateral fixo. Celular: barra fixa embaixo.
  */
 export default async function ProtegidoLayout({ children }: LayoutProps<"/">) {
   if (!hasSupabaseEnv()) return <AvisoSupabase />;
@@ -23,30 +28,31 @@ export default async function ProtegidoLayout({ children }: LayoutProps<"/">) {
   if (status === "banido") redirect("/acesso-negado");
   if (status !== "aprovado") redirect("/aguardando");
 
+  const permissoes: Permissoes = {
+    lanca: podeLancar(sessao.perfil),
+    admin: ehAdmin(sessao.perfil),
+  };
+
+  const conta = (
+    <BlocoConta
+      email={sessao.email}
+      papel={sessao.perfil ? ROTULO_ROLE[sessao.perfil.role] : ""}
+    />
+  );
+
   return (
-    <>
-      <header className="border-b border-slate-200 dark:border-slate-800">
-        <div className="mx-auto flex w-full max-w-md items-center justify-between gap-3 px-5 py-3">
-          <div className="flex min-w-0 flex-col">
-            <span className="truncate text-sm font-medium">{sessao.email}</span>
-            <span className="text-xs text-slate-500 dark:text-slate-400">
-              {sessao.perfil ? ROTULO_ROLE[sessao.perfil.role] : ""}
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            {ehAdmin(sessao.perfil) ? (
-              <Link
-                href="/admin/usuarios"
-                className="text-sm font-medium text-blue-700 underline underline-offset-4 dark:text-blue-400"
-              >
-                Usuários
-              </Link>
-            ) : null}
-            <BotaoSair />
-          </div>
-        </div>
-      </header>
-      {children}
-    </>
+    <div className="flex flex-1 flex-col">
+      <MenuLateral permissoes={permissoes} conta={conta} />
+
+      {/* Espaço embaixo para a barra fixa do celular não cobrir o conteúdo. */}
+      <div className="flex flex-1 flex-col pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0 lg:pl-64">
+        <header className="flex h-14 items-center border-b border-borda bg-superficie px-4 sm:px-6 lg:hidden">
+          <Marca />
+        </header>
+        {children}
+      </div>
+
+      <BarraInferior permissoes={permissoes} conta={conta} />
+    </div>
   );
 }

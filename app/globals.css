@@ -1,21 +1,124 @@
 @import "tailwindcss";
 
+/*
+ * Padrão visual do app.
+ *
+ * Toda tela usa estes tokens (bg-superficie, text-texto-2, border-borda,
+ * bg-marca, rounded-cartao…) em vez de cores soltas do Tailwind. Trocar a cor
+ * de destaque ou ajustar o modo escuro é mexer só aqui.
+ */
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-}
+  /* campos nativos (data, select) acompanham o tema */
+  color-scheme: light dark;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  /* superfícies */
+  --fundo: #f4f5f7;
+  --superficie: #ffffff;
+  --superficie-suave: #f7f8fa;
+  --borda: #e7e9ee;
+  --borda-forte: #d4d8e0;
+
+  /* texto */
+  --texto: #111318;
+  --texto-2: #5b616e;
+  --texto-3: #8b919d;
+
+  /* destaque (azul da referência) */
+  --marca: #3b6ff5;
+  --marca-forte: #2c5be0;
+  --marca-suave: #eaf0ff;
+  --marca-texto: #2c5be0;
+
+  /* estados */
+  --sucesso: #16a34a;
+  --sucesso-suave: #e7f7ed;
+  --sucesso-texto: #15803d;
+  --aviso: #f59e0b;
+  --aviso-suave: #fff5e1;
+  --aviso-texto: #b45309;
+  --perigo: #e5484d;
+  --perigo-suave: #fdecec;
+  --perigo-texto: #c53030;
+  --evento: #8b5cf6;
+  --evento-suave: #f1ecff;
+  --evento-texto: #6d28d9;
+
+  --sombra-cartao: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.04);
+  --sombra-flutuante: 0 8px 24px rgb(16 24 40 / 0.12);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0f172a;
-    --foreground: #e2e8f0;
+    --fundo: #0b0d12;
+    --superficie: #14171e;
+    --superficie-suave: #1b1f28;
+    --borda: #242934;
+    --borda-forte: #343a47;
+
+    --texto: #eef0f4;
+    --texto-2: #a3a9b5;
+    --texto-3: #737a87;
+
+    --marca: #5b8bff;
+    --marca-forte: #7aa2ff;
+    --marca-suave: rgb(91 139 255 / 0.14);
+    --marca-texto: #8fb0ff;
+
+    --sucesso: #22c55e;
+    --sucesso-suave: rgb(34 197 94 / 0.14);
+    --sucesso-texto: #4ade80;
+    --aviso: #f59e0b;
+    --aviso-suave: rgb(245 158 11 / 0.14);
+    --aviso-texto: #fbbf24;
+    --perigo: #ef4444;
+    --perigo-suave: rgb(239 68 68 / 0.14);
+    --perigo-texto: #f87171;
+    --evento: #a78bfa;
+    --evento-suave: rgb(139 92 246 / 0.18);
+    --evento-texto: #c4b5fd;
+
+    --sombra-cartao: 0 1px 2px rgb(0 0 0 / 0.3);
+    --sombra-flutuante: 0 8px 24px rgb(0 0 0 / 0.5);
   }
+}
+
+@theme inline {
+  --color-fundo: var(--fundo);
+  --color-superficie: var(--superficie);
+  --color-superficie-suave: var(--superficie-suave);
+  --color-borda: var(--borda);
+  --color-borda-forte: var(--borda-forte);
+
+  --color-texto: var(--texto);
+  --color-texto-2: var(--texto-2);
+  --color-texto-3: var(--texto-3);
+
+  --color-marca: var(--marca);
+  --color-marca-forte: var(--marca-forte);
+  --color-marca-suave: var(--marca-suave);
+  --color-marca-texto: var(--marca-texto);
+
+  --color-sucesso: var(--sucesso);
+  --color-sucesso-suave: var(--sucesso-suave);
+  --color-sucesso-texto: var(--sucesso-texto);
+  --color-aviso: var(--aviso);
+  --color-aviso-suave: var(--aviso-suave);
+  --color-aviso-texto: var(--aviso-texto);
+  --color-perigo: var(--perigo);
+  --color-perigo-suave: var(--perigo-suave);
+  --color-perigo-texto: var(--perigo-texto);
+  --color-evento: var(--evento);
+  --color-evento-suave: var(--evento-suave);
+  --color-evento-texto: var(--evento-texto);
+
+  /* cantos: campos/botões, cartões, botão central do celular */
+  --radius-campo: 0.625rem;
+  --radius-cartao: 1rem;
+
+  --shadow-cartao: var(--sombra-cartao);
+  --shadow-flutuante: var(--sombra-flutuante);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 html {
@@ -26,7 +129,7 @@ html {
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--fundo);
+  color: var(--texto);
   font-family: var(--font-sans);
 }

@@ -32,12 +32,12 @@ export function FormularioLogin({ destino }: { destino: string }) {
         required
       />
 
-      <label className="flex items-center gap-2.5 text-sm">
+      <label className="flex items-center gap-2.5 text-sm text-texto-2">
         <input
           type="checkbox"
           name="lembrar"
           defaultChecked
-          className="size-4 rounded border-slate-300 accent-blue-600 dark:border-slate-700"
+          className="size-4 accent-marca"
         />
         Manter-me conectado neste aparelho
       </label>

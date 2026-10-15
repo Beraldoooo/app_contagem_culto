@@ -33,12 +33,24 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
 - [x] Publicado na Vercel
 - [x] Dados de teste removidos do banco (conferido em 2026-10-15: 0 horários, 0 contagens, 3 usuários)
 - [x] `README.md` atualizado com o estado real do projeto
+- [x] Redesenho, etapa 1 — estrutura e navegação: menu lateral fixo no desktop, barra inferior no celular com
+      "Lançar" em destaque, menu respeitando papéis, padrão visual único (tokens em `app/globals.css`,
+      componentes em `components/ui/`) aplicado a todas as telas; "Tendência" virou "Relatórios" (`/relatorios`,
+      com `/tendencia` redirecionando)
+
+### Convenções de interface
+- Use os tokens de `app/globals.css` (`bg-superficie`, `text-texto-2`, `border-borda`, `bg-marca`, `rounded-cartao`…)
+  e os componentes de `components/ui/` (`Pagina`, `CabecalhoPagina`, `Cartao`, `Selo`, `Botao`/`LinkBotao`,
+  `FiltroSelect`) — não use cores soltas do Tailwind (`slate-*`, `blue-*`) nem `dark:`.
+- Destinos de navegação ficam só em `components/navegacao/itens.ts`.
 
 ### O que falta (antes do uso real)
-- [ ] **Recuperação de senha** ("esqueci minha senha") — **próximo passo**; hoje só por `update` manual no SQL Editor
+- [ ] **Redesenho, etapa 2 — conteúdo do painel inicial** (cartões de números, gráfico, comparativos no estilo
+      da referência de dashboard) — **próximo passo**
+- [ ] **Recuperação de senha** ("esqueci minha senha") — hoje só por `update` manual no SQL Editor
       (a rota `app/auth/confirm/route.ts` já aceita o link de recuperação; faltam as telas e a action)
 - [ ] Conferir a configuração do Supabase em produção (Site URL / Redirect URLs, confirmação de e-mail)
-- [ ] Revisar detalhes de domínio e acabamento visual
+- [ ] Revisar detalhes de domínio
 - [ ] **Fase 2**: envio automático do resumo do dia para o grupo de WhatsApp (adiada)
 
 ## 1. Visão Geral

@@ -1,22 +1,39 @@
+import { IconeAlerta } from "@/components/icones";
+import { TelaCentralizada } from "@/components/ui/tela-centralizada";
+
+function Codigo({ children }: { children: React.ReactNode }) {
+  return (
+    <code className="rounded bg-superficie-suave px-1 py-0.5 text-xs text-texto ring-1 ring-borda">
+      {children}
+    </code>
+  );
+}
+
 /**
  * Mostrado quando faltam as variáveis do Supabase — evita uma tela de erro
  * críptica em quem acabou de clonar o projeto.
  */
 export function AvisoSupabase() {
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-4 px-5 py-10">
-      <h1 className="text-xl font-semibold">Supabase não configurado</h1>
-      <p className="text-sm text-slate-600 dark:text-slate-400">
-        Copie <code className="rounded bg-slate-200 px-1 py-0.5 text-xs dark:bg-slate-800">.env.local.example</code>{" "}
-        para <code className="rounded bg-slate-200 px-1 py-0.5 text-xs dark:bg-slate-800">.env.local</code>, preencha{" "}
-        <code className="rounded bg-slate-200 px-1 py-0.5 text-xs dark:bg-slate-800">NEXT_PUBLIC_SUPABASE_URL</code> e{" "}
-        <code className="rounded bg-slate-200 px-1 py-0.5 text-xs dark:bg-slate-800">NEXT_PUBLIC_SUPABASE_ANON_KEY</code>{" "}
-        e reinicie o servidor.
-      </p>
-      <p className="text-sm text-slate-600 dark:text-slate-400">
-        Rode também <code className="rounded bg-slate-200 px-1 py-0.5 text-xs dark:bg-slate-800">supabase/schema.sql</code>{" "}
-        no SQL Editor do seu projeto.
-      </p>
-    </main>
+    <TelaCentralizada
+      icone={IconeAlerta}
+      tom="aviso"
+      titulo="Supabase não configurado"
+      descricao={
+        <div className="flex flex-col gap-3">
+          <p>
+            Copie <Codigo>.env.local.example</Codigo> para{" "}
+            <Codigo>.env.local</Codigo>, preencha{" "}
+            <Codigo>NEXT_PUBLIC_SUPABASE_URL</Codigo> e{" "}
+            <Codigo>NEXT_PUBLIC_SUPABASE_ANON_KEY</Codigo> e reinicie o
+            servidor.
+          </p>
+          <p>
+            Rode também <Codigo>supabase/schema.sql</Codigo> no SQL Editor do
+            seu projeto.
+          </p>
+        </div>
+      }
+    />
   );
 }

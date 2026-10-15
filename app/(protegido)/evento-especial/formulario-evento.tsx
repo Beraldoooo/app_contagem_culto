@@ -5,6 +5,9 @@ import { useFormStatus } from "react-dom";
 
 import { Alerta } from "@/components/alerta";
 import { Campo } from "@/components/campo";
+import { IconeFechar } from "@/components/icones";
+import { classesCampo, classesRotulo } from "@/components/ui/base";
+import { classesBotao } from "@/components/ui/botao";
 
 import { criarEventoEspecial, type EstadoEvento } from "./acoes";
 
@@ -15,7 +18,7 @@ function Botao() {
     <button
       type="submit"
       disabled={pending}
-      className="h-11 rounded-lg bg-blue-600 px-4 text-base font-medium text-white transition hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600 disabled:opacity-60"
+      className={classesBotao({ larguraTotal: true })}
     >
       {pending ? "Salvando…" : "Criar evento"}
     </button>
@@ -43,7 +46,7 @@ export function FormularioEvento({ dataInicial }: { dataInicial: string }) {
   }
 
   return (
-    <form action={enviar} className="flex flex-col gap-4">
+    <form action={enviar} className="flex flex-col gap-5">
       <Campo
         rotulo="Nome do evento"
         name="nome"
@@ -57,7 +60,7 @@ export function FormularioEvento({ dataInicial }: { dataInicial: string }) {
       <Campo rotulo="Data" name="data" type="date" required defaultValue={dataInicial} />
 
       <fieldset className="flex flex-col gap-2">
-        <legend className="mb-1.5 text-sm font-medium">Horários</legend>
+        <legend className={`mb-1.5 ${classesRotulo}`}>Horários</legend>
 
         {horarios.map((horario, indice) => (
           <div key={horario.id} className="flex items-center gap-2">
@@ -71,7 +74,7 @@ export function FormularioEvento({ dataInicial }: { dataInicial: string }) {
               required
               value={horario.valor}
               onChange={(e) => alterar(horario.id, e.target.value)}
-              className="h-11 flex-1 rounded-lg border border-slate-300 bg-white px-3 text-base outline-none transition focus:border-blue-600 focus:ring-2 focus:ring-blue-600/20 dark:border-slate-700 dark:bg-slate-950"
+              className={`${classesCampo} flex-1`}
             />
             <button
               type="button"
@@ -80,9 +83,9 @@ export function FormularioEvento({ dataInicial }: { dataInicial: string }) {
               }
               disabled={horarios.length === 1}
               aria-label={`Remover horário ${indice + 1}`}
-              className="h-11 rounded-lg border border-slate-300 px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100 disabled:opacity-30 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800"
+              className={`${classesBotao({ variante: "secundario" })} w-11 px-0`}
             >
-              Remover
+              <IconeFechar tamanho={18} />
             </button>
           </div>
         ))}
@@ -95,7 +98,7 @@ export function FormularioEvento({ dataInicial }: { dataInicial: string }) {
               { id: proximoId.current++, valor: "" },
             ])
           }
-          className="h-11 rounded-lg border border-dashed border-slate-400 text-sm font-medium text-slate-600 transition hover:bg-slate-100 dark:border-slate-600 dark:text-slate-400 dark:hover:bg-slate-800"
+          className="h-11 rounded-campo border border-dashed border-borda-forte text-sm font-medium text-marca-texto transition hover:bg-marca-suave"
         >
           + Adicionar horário
         </button>

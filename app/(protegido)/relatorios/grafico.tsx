@@ -21,11 +21,11 @@ export type Ponto = {
   nomeEvento: string | null;
 };
 
-// Cores fixas em vez de tokens do tema: o SVG do gráfico não herda as classes
-// do Tailwind, e estes tons têm contraste suficiente no claro e no escuro.
-const AZUL = "#3b82f6";
-const VIOLETA = "#a78bfa";
-const CINZA = "#94a3b8";
+// As cores vêm dos tokens do tema (globals.css): o SVG aceita var() nos
+// atributos de cor, então o gráfico acompanha o modo claro e o escuro.
+const AZUL = "var(--marca)";
+const VIOLETA = "var(--evento)";
+const CINZA = "var(--texto-3)";
 
 function Caixa({
   active,
@@ -38,15 +38,15 @@ function Caixa({
   if (!active || !ponto) return null;
 
   return (
-    <div className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <div className="rounded-campo border border-borda bg-superficie px-3 py-2 text-xs shadow-flutuante">
       <p className="font-medium">{ponto.rotulo}</p>
       {ponto.regular !== null ? (
-        <p className="mt-1 text-slate-600 dark:text-slate-400">
+        <p className="mt-1 text-texto-2">
           Culto: <span className="font-medium">{ponto.regular}</span>
         </p>
       ) : null}
       {ponto.evento !== null ? (
-        <p className="mt-1 text-violet-700 dark:text-violet-300">
+        <p className="mt-1 text-evento-texto">
           {ponto.nomeEvento}: <span className="font-medium">{ponto.evento}</span>
         </p>
       ) : null}
@@ -66,7 +66,7 @@ export function Grafico({
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart
           data={pontos}
-          margin={{ top: 8, right: 8, bottom: 0, left: -18 }}
+          margin={{ top: 8, right: 8, bottom: 0, left: 0 }}
         >
           <CartesianGrid stroke={CINZA} strokeOpacity={0.25} vertical={false} />
           <XAxis

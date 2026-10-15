@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { IconeAlerta } from "@/components/icones";
+import { LinkBotao } from "@/components/ui/botao";
+import { TelaCentralizada } from "@/components/ui/tela-centralizada";
 
 export const metadata: Metadata = { title: "Link inválido" };
 
@@ -39,24 +41,10 @@ export default async function LinkInvalidoPage({
   const { titulo, texto } = MOTIVOS[chave] ?? PADRAO;
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center gap-6 px-5 py-10">
-      <div className="flex flex-col gap-2">
-        <span
-          aria-hidden
-          className="flex size-11 items-center justify-center rounded-full bg-amber-100 text-xl dark:bg-amber-950/60"
-        >
-          ⚠️
-        </span>
-        <h1 className="text-2xl font-semibold tracking-tight">{titulo}</h1>
-        <p className="text-sm text-slate-600 dark:text-slate-400">{texto}</p>
-      </div>
-
-      <Link
-        href="/login"
-        className="flex h-11 items-center justify-center rounded-lg bg-slate-900 px-4 text-base font-medium text-white transition hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-white"
-      >
+    <TelaCentralizada icone={IconeAlerta} tom="aviso" titulo={titulo} descricao={texto}>
+      <LinkBotao href="/login" larguraTotal>
         Ir para o login
-      </Link>
-    </main>
+      </LinkBotao>
+    </TelaCentralizada>
   );
 }

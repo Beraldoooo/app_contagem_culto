@@ -31,8 +31,10 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#2563eb" },
-    { media: "(prefers-color-scheme: dark)", color: "#0f172a" },
+    // Mesma cor da faixa do topo (--superficie), para a barra de status
+    // do celular emendar com o app.
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#14171e" },
   ],
   width: "device-width",
   initialScale: 1,
@@ -46,7 +48,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="flex min-h-full flex-col bg-background text-foreground">
+      <body className="flex min-h-full flex-col bg-fundo text-texto">
         {children}
         <ServiceWorkerRegister />
       </body>
