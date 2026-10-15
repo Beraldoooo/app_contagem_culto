@@ -55,10 +55,17 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
   `FiltroSelect`) — não use cores soltas do Tailwind (`slate-*`, `blue-*`) nem `dark:`.
 - Destinos de navegação ficam só em `components/navegacao/itens.ts`.
 
+- [x] E-mails configurados no painel do Supabase (pelo Beraldo, em 2026-10-15): SMTP por um Gmail próprio do app
+      com senha de app, modelos "Confirm signup" e "Reset Password" em português com `token_hash`, Site URL
+      `https://app-contagem-culto.vercel.app` e Redirect URL `https://app-contagem-culto.vercel.app/**`.
+      Banco de produção já tem `supabase/nome-exibicao.sql` aplicado.
+
 ### O que falta (antes do uso real)
-- [ ] **Configurar os e-mails no painel do Supabase** (feito pelo Beraldo; passo a passo no README, seção
-      "E-mails"): Site URL e Redirect URLs, modelos "Confirm signup" e "Reset Password" com `token_hash`, e SMTP
-      próprio para uso real — **próximo passo**
+- [ ] **Confirmar o teste do "Esqueci minha senha"** de ponta a ponta (e-mail chegando e link abrindo `/nova-senha`)
+      — ainda não confirmado pelo Beraldo
+- [ ] **"Recusar" cadastro pendente** em `/admin/usuarios` — pedido pelo Beraldo, ainda não feito. Ideia discutida:
+      recusar = `status: banido` com `role` ainda `pendente` (a tela mostra "Recusado"), e "Reconsiderar" devolve
+      para `pendente`. Apagar a conta de vez exigiria a chave service_role, que o app não tem.
 - [ ] Revisar detalhes de domínio
 - [ ] **Fase 2**: envio automático do resumo do dia para o grupo de WhatsApp — por último, mas é a prioridade
       mais importante para o Beraldo

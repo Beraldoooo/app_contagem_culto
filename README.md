@@ -458,15 +458,19 @@ Antes do uso real, falta:
 
 9. ~~Recuperação de senha~~ — feito: "Esqueci minha senha" no login e
    "Alterar senha" em Configurações.
-10. **Configurar os e-mails no Supabase** (Site URL, Redirect URLs, modelos e
-    SMTP) — ver [E-mails](#e-mails-confirmação-de-cadastro-e-recuperação-de-senha).
-    Sem isso o link de recuperação não chega ou não abre.
+10. ~~Configurar os e-mails no Supabase~~ — feito: SMTP por um Gmail próprio
+    do app (com senha de app), modelos em português com `token_hash`, Site URL
+    e Redirect URLs (`/**`) — ver [E-mails](#e-mails-confirmação-de-cadastro-e-recuperação-de-senha).
+    Falta confirmar o teste ponta a ponta do "Esqueci minha senha".
 11. ~~Redesenho da estrutura e da navegação~~ — feito: menu lateral no
     desktop, barra inferior no celular, padrão visual único em todas as telas
     e "Tendência" renomeada para "Relatórios".
 12. ~~Conteúdo do painel inicial~~ — feito: resumo do último culto e gráficos
     de Domingos e Quintas.
-13. Revisar detalhes de domínio.
+13. ~~Nome de exibição~~ — feito: o menu mostra o nome, não o e-mail.
+14. **"Recusar" cadastro** na tela de Usuários — hoje só existe "Aprovar
+    acesso"; recusar exigiria aprovar e depois banir.
+15. Revisar detalhes de domínio.
 
 Fase 2 do escopo original (envio automático do resumo para o WhatsApp) segue
 adiada, como previsto desde o início.
