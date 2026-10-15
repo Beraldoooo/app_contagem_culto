@@ -258,11 +258,15 @@ sessão e manda a pessoa adiante: a confirmação de cadastro vai para
 - **Site URL**: `https://app-contagem-culto.vercel.app`. É a base dos links
   dos e-mails; se estiver `http://localhost:3000`, os links só abrem no
   computador de quem desenvolve.
-- **Redirect URLs**: `https://app-contagem-culto.vercel.app/auth/confirm` (e,
-  para testar localmente, `http://localhost:3000/auth/confirm`).
+- **Redirect URLs**: `https://app-contagem-culto.vercel.app/**` (e, para
+  testar localmente, `http://localhost:3000/**`). O `/**` cobre o
+  `/auth/confirm?next=…` que o app manda nos links.
 
-**2. Modelos dos e-mails** — em **Authentication → Emails**, troque o link de
-cada modelo. Os dois usam `token_hash`, que funciona mesmo abrindo o e-mail em
+**2. Modelos dos e-mails** — **sem SMTP próprio o Supabase não deixa editar
+os modelos**, e os padrões funcionam: o app informa o destino do link
+(`emailRedirectTo`/`redirectTo`), mas o link só abre no mesmo navegador em
+que a pessoa se cadastrou ou pediu a recuperação. Depois de configurar o SMTP
+(passo 3), em **Authentication → Emails**, troque o link de cada modelo. Os dois usam `token_hash`, que funciona mesmo abrindo o e-mail em
 outro aparelho (o modelo padrão do Supabase usa `?code=`, que só funciona no
 mesmo navegador — a rota aceita os dois, mas aí pede para abrir no aparelho
 certo).

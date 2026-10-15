@@ -112,6 +112,10 @@ export async function cadastrar(
   const { data, error } = await supabase.auth.signUp({
     email,
     password: senha,
+    // Para onde o link de confirmação volta. Sem isto, o modelo padrão do
+    // Supabase manda para a raiz do site, que não sabe trocar o código por
+    // sessão. (O modelo com token_hash do README monta o mesmo destino.)
+    options: { emailRedirectTo: `${await origemDoApp()}/auth/confirm?next=/aguardando` },
   });
 
   if (error) {
