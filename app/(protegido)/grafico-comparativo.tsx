@@ -11,8 +11,8 @@ import {
 import { DIAS_SEMANA, diaDaSemana, formatarDataCurta, hojeISO } from "@/lib/datas";
 import { createClient } from "@/lib/supabase/server";
 
-/** Barras por cartão: ~3 meses de domingos (ou de quintas). */
-const BARRAS = 12;
+/** Barras por cartão: ~6 meses de domingos (ou de quintas). */
+const BARRAS = 24;
 
 /** Um cartão por dia de culto fixo, na ordem em que aparecem. */
 const CARTOES = [
@@ -105,14 +105,14 @@ function CartaoDia({ titulo, cultos }: { titulo: string; cultos: Comparativo[] }
       </div>
 
       {cultos.length === 0 ? (
-        <p className="flex h-32 items-center justify-center text-center text-sm text-texto-3">
+        <p className="flex h-40 items-center justify-center text-center text-sm text-texto-3">
           Nenhuma contagem ainda.
         </p>
       ) : (
         <>
           <ul
             aria-label={`Frequência das ${titulo.toLowerCase()}`}
-            className="flex h-32 items-end justify-between gap-1 border-b border-borda"
+            className="flex h-40 items-end justify-between gap-1 border-b border-borda sm:h-48 sm:gap-2"
           >
             {cultos.map((c, i) => (
               <Barra
@@ -164,7 +164,7 @@ function Barra({
   const descricao = `${DIAS_SEMANA[diaDaSemana(atual.data)]}, ${data}: ${atual.total_cultos} pessoas, ${variacao}${parcial ? " (dia ainda parcial)" : ""}`;
 
   return (
-    <li className="group relative flex h-full w-2.5 items-end sm:w-3">
+    <li className="group relative flex h-full max-w-5 flex-1 items-end">
       <Link
         href={`/lancamento?data=${atual.data}`}
         aria-label={descricao}
