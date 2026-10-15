@@ -31,7 +31,13 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
 - [x] Auditoria das permissões do Visualizador contra a API real (`supabase/auditoria/visualizador.mjs`)
 - [x] Responsividade, `loading.tsx`, `error.tsx`, `not-found.tsx` e mensagens de erro amigáveis
 - [x] Publicado na Vercel
-- [x] Dados de teste removidos do banco (conferido em 2026-10-15: 0 horários, 0 contagens, 3 usuários)
+- [x] Dados de teste removidos do banco. Aconteceu duas vezes: a limpeza de setembro e, de novo, em
+      2026-10-15, quando a sessão que montou os gráficos deixou 7 contagens de 04/10, 08/10 e 11/10 no banco
+      de produção. Estado conferido depois: **0 contagens**, 8 eventos de culto fixo (legítimos, sem lançamento)
+      e 3 usuários. **Nunca criar dado de teste no Supabase de produção** — usar banco local ou criar e apagar
+      na mesma sessão. Ao encontrar dado suspeito, perguntar ao Beraldo antes de apagar: pode ser contagem real.
+- [x] Conta de teste `teste.contagem@example.com` é **visualizador / aprovado** (confirmado pelo Beraldo e pela
+      auditoria em 2026-10-15). A senha é conhecida, mas o papel não escreve nada. Não é mais pendência.
 - [x] `README.md` atualizado com o estado real do projeto
 - [x] Redesenho, etapa 1 — estrutura e navegação: menu lateral fixo no desktop, barra inferior no celular com
       "Lançar" em destaque, menu respeitando papéis, padrão visual único (tokens em `app/globals.css`,

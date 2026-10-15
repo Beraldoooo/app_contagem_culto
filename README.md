@@ -239,6 +239,13 @@ node supabase/auditoria/visualizador.mjs
 São 9 leituras que precisam funcionar e 10 escritas que precisam falhar, mais a
 função `gerar_eventos_fixos` e a reconferência de que nada foi alterado.
 
+As verificações que dependem de dado existente aparecem como **puladas** (`–`)
+quando o banco ainda não tem contagens, em vez de contarem como falha — é o
+estado normal antes do primeiro culto lançado. Os filtros saem do que existe no
+banco no momento, não de datas fixas, para a auditoria não acusar erro só
+porque os dados mudaram. Sai com 0 mesmo havendo puladas; só falha de verdade
+devolve 1.
+
 Quem não tem sessão é redirecionado para `/login?redirecionar=<destino>` pelo
 `proxy.ts`. O status do perfil é checado no layout de `(protegido)`, que já
 consulta o banco. A garantia real é a RLS: pendente e banido não leem dado
@@ -475,8 +482,12 @@ apagar histórico não é.
 
 A especificação do `CLAUDE.md` está coberta.
 
-7. ~~Limpar os dados de teste do banco~~ — feito (conferido em 15/10/2026:
-   0 horários, 0 contagens e 3 usuários).
+7. ~~Limpar os dados de teste do banco~~ — feito em 15/10/2026, em duas
+   rodadas: a segunda tirou 7 contagens que ficaram para trás depois de
+   servirem para montar os gráficos
+   ([`supabase/limpar-dados-teste-15-10-2026.sql`](./supabase/limpar-dados-teste-15-10-2026.sql)).
+   Estado conferido: 0 contagens, 8 horários de culto fixo sem lançamento e
+   3 usuários.
 8. ~~Publicar na Vercel~~ — feito: https://app-contagem-culto.vercel.app
 
 Antes do uso real, falta:

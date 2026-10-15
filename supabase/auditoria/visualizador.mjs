@@ -17,9 +17,12 @@ const env = fs.readFileSync(new URL("../../.env.local", import.meta.url), "utf8"
 const ler = (k) => env.match(new RegExp(`^${k}=(.*)$`, "m"))[1].trim().replace(/^["']|["']$/g, "");
 const U = ler("NEXT_PUBLIC_SUPABASE_URL"), K = ler("NEXT_PUBLIC_SUPABASE_ANON_KEY");
 
-let ok = 0, falhou = 0;
+let ok = 0, falhou = 0, pulado = 0;
 const bom = (m, d="") => { ok++; console.log("  \x1b[32m✓\x1b[0m", m, d); };
 const ruim = (m, d="") => { falhou++; console.log("  \x1b[31m✗\x1b[0m", m, d); };
+// Sem dado para testar não é falha — é verificação que não dá para fazer.
+// Com o banco vazio (antes do primeiro culto real) isso é o normal.
+const pula = (m, d="") => { pulado++; console.log("  \x1b[90m–\x1b[0m", m, `\x1b[90m${d}\x1b[0m`); };
 
 const s = await (await fetch(`${U}/auth/v1/token?grant_type=password`, {
   method: "POST", headers: { apikey: K, "Content-Type": "application/json" },
@@ -42,24 +45,37 @@ const ct = await (await fetch(`${U}/rest/v1/contagens?select=id,evento_id,quanti
 const alvoEvento = ev[0], alvoContagem = ct[0];
 
 console.log("=== LEITURA — tudo deve funcionar (Fases 3 e 4) ===");
+// Os filtros saem do que existe no banco agora, e não de datas fixas: com
+// datas chumbadas a auditoria passava a acusar falha toda vez que os dados
+// mudavam, sem nada de errado nas permissões.
+const umaData = alvoEvento?.data;
+const temEspecial = ev.some((e) => e.tipo === "evento_especial");
+const umHorario = ev.find((e) => e.tipo === "culto_fixo")?.horario;
+
 const leituras = [
-  ["dashboard: totais por data",      `totais_por_data?select=data,total_cultos&tem_culto_fixo=is.true&order=data.desc&limit=5`],
-  ["histórico: com filtro de período", `totais_por_data?select=data,total&data=gte.2026-06-01&data=lte.2026-07-31&order=data.desc`],
-  ["histórico: filtro por tipo",       `totais_por_data?select=data&tem_evento_especial=is.true`],
-  ["gráfico: série de um horário",     `contagens?select=quantidade,eventos!inner(data,horario)&eventos.tipo=eq.culto_fixo&eventos.horario=eq.10:00:00&limit=5`],
-  ["gráfico: eventos especiais",       `contagens?select=quantidade,eventos!inner(data,nome)&eventos.tipo=eq.evento_especial`],
-  ["gráfico: opções de horário",       `horarios_padrao?select=dia_semana,horario,nome&ativo=is.true`],
-  ["detalhe do dia: eventos",          `eventos?select=id,nome,horario,tipo&data=eq.2026-09-13`],
-  ["detalhe do dia: contagens",        `contagens?select=evento_id,quantidade&limit=5`],
-  ["próprio perfil",                   `profiles?select=email,role,status`],
+  ["dashboard: totais por data",      `totais_por_data?select=data,total_cultos&tem_culto_fixo=is.true&order=data.desc&limit=5`, ev.length],
+  ["histórico: com filtro de período", umaData && `totais_por_data?select=data,total&data=gte.${umaData}&data=lte.${umaData}`, ev.length],
+  ["histórico: filtro por tipo",       `totais_por_data?select=data&tem_evento_especial=is.true`, temEspecial],
+  ["gráfico: série de um horário",     umHorario && `contagens?select=quantidade,eventos!inner(data,horario)&eventos.tipo=eq.culto_fixo&eventos.horario=eq.${umHorario}&limit=5`, ct.length],
+  ["gráfico: eventos especiais",       `contagens?select=quantidade,eventos!inner(data,nome)&eventos.tipo=eq.evento_especial`, temEspecial && ct.length],
+  ["gráfico: opções de horário",       `horarios_padrao?select=dia_semana,horario,nome&ativo=is.true`, true],
+  ["detalhe do dia: eventos",          umaData && `eventos?select=id,nome,horario,tipo&data=eq.${umaData}`, ev.length],
+  ["detalhe do dia: contagens",        `contagens?select=evento_id,quantidade&limit=5`, ct.length],
+  ["próprio perfil",                   `profiles?select=email,role,status`, true],
 ];
-for (const [rotulo, caminho] of leituras) {
+for (const [rotulo, caminho, temDado] of leituras) {
+  if (!caminho || !temDado) {
+    pula(rotulo.padEnd(34), "sem dado no banco para provar");
+    continue;
+  }
   const r = await fetch(`${U}/rest/v1/${caminho}`, { headers: H });
   const corpo = await r.json();
   const n = Array.isArray(corpo) ? corpo.length : 0;
   if (r.ok && n > 0) {
     bom(`${rotulo.padEnd(34)} ${n} linhas`);
   } else {
+    // 200 com zero linhas aqui é falha de verdade: o dado existe e a RLS
+    // escondeu dele.
     ruim(rotulo, `status ${r.status} ${JSON.stringify(corpo).slice(0, 80)}`);
   }
 }
@@ -78,6 +94,12 @@ const escritas = [
   ["promover outro",       "PATCH",  `profiles?role=eq.pendente`, { status: "aprovado" }],
 ];
 for (const [rotulo, metodo, caminho, corpo] of escritas) {
+  // Sem uma linha existente para mirar, o PostgREST responde 400 por id
+  // inválido — o que não diria nada sobre permissão.
+  if (caminho.includes("undefined")) {
+    pula(rotulo.padEnd(24), "sem linha existente para tentar alterar");
+    continue;
+  }
   const r = await fetch(`${U}/rest/v1/${caminho}`, { method: metodo, headers: HW, ...(corpo ? { body: JSON.stringify(corpo) } : {}) });
   let dados = null; try { dados = await r.json(); } catch {}
   if (bloqueado(r, dados)) {
@@ -98,11 +120,15 @@ if (bloqueado(r, corpo)) {
 }
 
 console.log("\n=== NADA FOI ALTERADO? ===");
-const depois = await (await fetch(`${U}/rest/v1/contagens?select=id,quantidade&id=eq.${alvoContagem?.id}`, { headers: H })).json();
-if (depois[0]?.quantidade === alvoContagem?.quantidade) {
-  bom(`contagem intacta (${alvoContagem?.quantidade})`);
+if (!alvoContagem) {
+  pula("contagem intacta", "não havia contagem no banco");
 } else {
-  ruim("contagem foi alterada!", JSON.stringify(depois));
+  const depois = await (await fetch(`${U}/rest/v1/contagens?select=id,quantidade&id=eq.${alvoContagem.id}`, { headers: H })).json();
+  if (depois[0]?.quantidade === alvoContagem.quantidade) {
+    bom(`contagem intacta (${alvoContagem.quantidade})`);
+  } else {
+    ruim("contagem foi alterada!", JSON.stringify(depois));
+  }
 }
 const evDepois = await (await fetch(`${U}/rest/v1/eventos?select=id,nome&id=eq.${alvoEvento.id}`, { headers: H })).json();
 if (evDepois[0]?.nome) {
@@ -117,5 +143,14 @@ if (perfilDepois.role === "visualizador") {
   ruim(`papel virou ${perfilDepois.role}!`);
 }
 
-console.log(`\n${ok} passaram, ${falhou} falharam`);
+console.log(
+  `\n${ok} passaram, ${falhou} falharam` +
+    (pulado ? `, ${pulado} puladas por falta de dado no banco` : ""),
+);
+if (pulado && !falhou) {
+  console.log(
+    "\x1b[90mAs puladas não indicam problema: o banco está sem contagens.\n" +
+      "Rode de novo depois do primeiro culto lançado para cobrir tudo.\x1b[0m",
+  );
+}
 process.exit(falhou ? 1 : 0);
