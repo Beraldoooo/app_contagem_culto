@@ -1,18 +1,34 @@
 import type { Metadata } from "next";
 
 import { SeletorTema } from "@/components/seletor-tema";
+import { nomeDeExibicao, obterSessaoAtual } from "@/lib/auth/perfil";
 import { CabecalhoPagina, Cartao, Pagina } from "@/components/ui/base";
 import { LinkBotao } from "@/components/ui/botao";
 
+import { FormularioNome } from "./formulario-nome";
+
 export const metadata: Metadata = { title: "Configurações" };
 
-export default function ConfiguracoesPage() {
+export default async function ConfiguracoesPage() {
+  const sessao = await obterSessaoAtual();
+
   return (
     <Pagina largura="estreita">
       <CabecalhoPagina
         titulo="Configurações"
-        descricao="Aparência do app e acesso à sua conta."
+        descricao="Seu nome, a aparência do app e a sua senha."
       />
+
+      <Cartao as="section" className="flex flex-col gap-4">
+        <div className="flex flex-col gap-1">
+          <h2 className="text-base font-semibold">Nome de exibição</h2>
+          <p className="text-sm text-texto-2">
+            É o que aparece no app no lugar do seu e-mail. O e-mail só o
+            administrador vê, na tela de Usuários.
+          </p>
+        </div>
+        <FormularioNome nomeAtual={nomeDeExibicao(sessao?.perfil ?? null)} />
+      </Cartao>
 
       <Cartao as="section" className="flex flex-col gap-4">
         <div className="flex flex-col gap-1">

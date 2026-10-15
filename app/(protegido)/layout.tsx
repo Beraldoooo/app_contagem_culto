@@ -6,7 +6,13 @@ import { BarraInferior } from "@/components/navegacao/barra-inferior";
 import { BlocoConta } from "@/components/navegacao/bloco-conta";
 import type { Permissoes } from "@/components/navegacao/itens";
 import { MenuLateral } from "@/components/navegacao/menu-lateral";
-import { ehAdmin, obterSessaoAtual, podeLancar, ROTULO_ROLE } from "@/lib/auth/perfil";
+import {
+  ehAdmin,
+  nomeDeExibicao,
+  obterSessaoAtual,
+  podeLancar,
+  ROTULO_ROLE,
+} from "@/lib/auth/perfil";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 
 /**
@@ -35,7 +41,7 @@ export default async function ProtegidoLayout({ children }: LayoutProps<"/">) {
 
   const conta = (
     <BlocoConta
-      email={sessao.email}
+      nome={nomeDeExibicao(sessao.perfil)}
       papel={sessao.perfil ? ROTULO_ROLE[sessao.perfil.role] : ""}
     />
   );

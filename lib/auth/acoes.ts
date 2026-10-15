@@ -1,6 +1,7 @@
 "use server";
 
 import { cookies, headers } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
 import { COOKIE_LEMBRAR } from "@/lib/supabase/cookies";
@@ -93,10 +94,17 @@ export async function cadastrar(
   _estadoAnterior: EstadoFormulario,
   formData: FormData,
 ): Promise<EstadoFormulario> {
+  const nome = String(formData.get("nome") ?? "").trim();
   const email = String(formData.get("email") ?? "").trim();
   const senha = String(formData.get("senha") ?? "");
   const confirmacao = String(formData.get("confirmacao") ?? "");
 
+  if (!nome) {
+    return { erro: "Informe como você quer ser chamado no app." };
+  }
+  if (nome.length > 60) {
+    return { erro: "O nome pode ter no máximo 60 caracteres." };
+  }
   if (!email || !senha) {
     return { erro: "Preencha e-mail e senha." };
   }
@@ -115,7 +123,11 @@ export async function cadastrar(
     // Para onde o link de confirmação volta. Sem isto, o modelo padrão do
     // Supabase manda para a raiz do site, que não sabe trocar o código por
     // sessão. (O modelo com token_hash do README monta o mesmo destino.)
-    options: { emailRedirectTo: `${await origemDoApp()}/auth/confirm?next=/aguardando` },
+    options: {
+      emailRedirectTo: `${await origemDoApp()}/auth/confirm?next=/aguardando`,
+      // O trigger handle_new_user copia este nome para profiles.nome.
+      data: { nome },
+    },
   });
 
   if (error) {
@@ -219,4 +231,33 @@ export async function definirNovaSenha(
   if (error) return { erro: traduzirErro(error.message) };
 
   return { aviso: "Senha alterada. Use a nova senha nas próximas vezes que entrar." };
+}
+
+/** Troca o nome de exibição de quem está logado (Configurações). */
+export async function salvarNome(
+  _estadoAnterior: EstadoFormulario,
+  formData: FormData,
+): Promise<EstadoFormulario> {
+  const nome = String(formData.get("nome") ?? "").trim();
+  if (!nome) return { erro: "Informe um nome." };
+  if (nome.length > 60) return { erro: "O nome pode ter no máximo 60 caracteres." };
+
+  const supabase = await createClient();
+  // Função no banco em vez de UPDATE direto: só ela mexe no nome, e só no da
+  // própria pessoa — a RLS de profiles continua sem UPDATE para não-admins.
+  const { error } = await supabase.rpc("definir_meu_nome", { p_nome: nome });
+
+  if (error) {
+    // A função ainda não existe neste banco: falta rodar o SQL da mudança.
+    if (error.code === "PGRST202" || error.code === "42883") {
+      return {
+        erro: "O banco ainda não foi atualizado. Rode supabase/nome-exibicao.sql no SQL Editor do Supabase.",
+      };
+    }
+    return { erro: traduzirErro(error.message) };
+  }
+
+  // O nome aparece no menu, que é do layout: recarrega tudo abaixo de "/".
+  revalidatePath("/", "layout");
+  return { aviso: "Nome salvo." };
 }

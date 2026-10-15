@@ -28,6 +28,12 @@ export default async function AguardandoPage() {
       descricao="Sua conta foi criada, mas o Administrador Geral ainda precisa liberar o acesso. Assim que isso acontecer, é só entrar de novo."
     >
       <dl className="flex flex-col gap-2 rounded-campo bg-superficie-suave p-4 text-sm">
+        {sessao.perfil?.nome ? (
+          <div className="flex items-center justify-between gap-4">
+            <dt className="text-texto-2">Nome</dt>
+            <dd className="truncate font-medium">{sessao.perfil.nome}</dd>
+          </div>
+        ) : null}
         <div className="flex items-center justify-between gap-4">
           <dt className="text-texto-2">Conta</dt>
           <dd className="truncate font-medium">{sessao.email}</dd>
