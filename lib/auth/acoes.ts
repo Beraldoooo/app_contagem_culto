@@ -1,6 +1,6 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { COOKIE_LEMBRAR } from "@/lib/supabase/cookies";
@@ -25,6 +25,10 @@ function traduzirErro(mensagem: string): string {
     return "A senha precisa ter pelo menos 6 caracteres.";
   if (m.includes("unable to validate email") || m.includes("invalid email"))
     return "E-mail inválido.";
+  if (m.includes("should be different from the old password"))
+    return "A nova senha precisa ser diferente da atual.";
+  if (m.includes("auth session missing") || m.includes("session not found"))
+    return "Sua sessão expirou. Peça um novo link de recuperação.";
   if (m.includes("rate limit") || m.includes("too many"))
     return "Muitas tentativas seguidas. Espere um minuto e tente de novo.";
   // Falha de rede não é erro de senha: dizer "tente novamente" faria a pessoa
@@ -135,4 +139,80 @@ export async function sair() {
   cookieStore.delete(COOKIE_LEMBRAR);
 
   redirect("/login");
+}
+
+/** Endereço do app nesta requisição (https://… em produção, localhost em dev). */
+async function origemDoApp(): Promise<string> {
+  const h = await headers();
+  const host = h.get("x-forwarded-host") ?? h.get("host") ?? "localhost:3000";
+  const protocolo =
+    h.get("x-forwarded-proto") ?? (host.startsWith("localhost") ? "http" : "https");
+  return `${protocolo}://${host}`;
+}
+
+/**
+ * Envia o e-mail com o link para criar uma senha nova.
+ *
+ * A resposta é a mesma exista a conta ou não: dizer "esse e-mail não está
+ * cadastrado" ajudaria alguém a descobrir quem usa o app.
+ */
+export async function pedirRecuperacao(
+  _estadoAnterior: EstadoFormulario,
+  formData: FormData,
+): Promise<EstadoFormulario> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return { erro: "Informe o e-mail da sua conta." };
+
+  const supabase = await createClient(false);
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    // Usado pelo template padrão do Supabase; o template com token_hash (ver
+    // README) monta o mesmo destino a partir da Site URL.
+    redirectTo: `${await origemDoApp()}/auth/confirm?next=/nova-senha`,
+  });
+
+  if (error) {
+    const traduzido = traduzirErro(error.message);
+    // Só falha de rede ou excesso de tentativas viram erro na tela; o resto
+    // cai na mesma resposta neutra.
+    if (/conexão|tentativas/.test(traduzido)) return { erro: traduzido };
+    console.error("Falha ao pedir recuperação de senha:", error.message);
+  }
+
+  return {
+    aviso:
+      "Se houver uma conta com esse e-mail, enviamos um link para criar uma nova senha. " +
+      "Confira a caixa de entrada e também o spam. O link vale por 1 hora.",
+  };
+}
+
+/**
+ * Grava a senha nova de quem está logado — vindo do link de recuperação ou
+ * de "Alterar senha" em Configurações.
+ */
+export async function definirNovaSenha(
+  _estadoAnterior: EstadoFormulario,
+  formData: FormData,
+): Promise<EstadoFormulario> {
+  const senha = String(formData.get("senha") ?? "");
+  const confirmacao = String(formData.get("confirmacao") ?? "");
+
+  if (senha.length < 6) {
+    return { erro: "A senha precisa ter pelo menos 6 caracteres." };
+  }
+  if (senha !== confirmacao) {
+    return { erro: "As senhas não conferem." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    return { erro: "Sua sessão expirou. Peça um novo link de recuperação." };
+  }
+
+  const { error } = await supabase.auth.updateUser({ password: senha });
+  if (error) return { erro: traduzirErro(error.message) };
+
+  return { aviso: "Senha alterada. Use a nova senha nas próximas vezes que entrar." };
 }

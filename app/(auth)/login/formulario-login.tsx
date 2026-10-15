@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 
 import { Alerta } from "@/components/alerta";
@@ -31,6 +32,15 @@ export function FormularioLogin({ destino }: { destino: string }) {
         autoComplete="current-password"
         required
       />
+
+      <div className="-mt-1 flex justify-end">
+        <Link
+          href="/recuperar-senha"
+          className="text-sm font-medium text-marca-texto underline-offset-4 hover:underline"
+        >
+          Esqueci minha senha
+        </Link>
+      </div>
 
       <label className="flex items-center gap-2.5 text-sm text-texto-2">
         <input

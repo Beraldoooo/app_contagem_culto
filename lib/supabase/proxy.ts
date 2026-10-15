@@ -16,6 +16,8 @@ import { hasSupabaseEnv, SUPABASE_ANON_KEY, SUPABASE_URL } from "./env";
 const ROTAS_PUBLICAS = [
   "/login",
   "/cadastro",
+  // Quem esqueceu a senha não tem sessão — justamente por isso está aqui.
+  "/recuperar-senha",
   "/acesso-negado",
   // É justamente aqui que a sessão nasce, vinda do link do e-mail: exigir
   // sessão desviaria a confirmação para /login e ela nunca aconteceria.
