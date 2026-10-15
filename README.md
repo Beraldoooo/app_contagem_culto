@@ -321,6 +321,26 @@ administrador vê nome e e-mail na tela de Usuários.
 - Quem está logado troca a senha em **Configurações → Alterar senha** (mesma
   tela `/nova-senha`).
 
+### Conferência do "Esqueci minha senha"
+
+Testado contra o site publicado em 15/10/2026, passo a passo:
+
+| Passo | Resultado |
+| --- | --- |
+| Formulário em `/recuperar-senha` | responde com a mensagem neutra, exista a conta ou não |
+| E-mail | chega em menos de 1 minuto, na caixa de entrada — não no spam |
+| Link do e-mail, **sem nenhum cookie** (= outro aparelho) | cria a sessão e abre `/nova-senha` |
+| Gravar a senha | caminho liberado; só o valor é validado (`weak_password` para menos de 6 caracteres, que o app traduz) |
+| Token inválido ou vencido | `/link-invalido?motivo=recuperacao-expirada`, com "Pedir um novo link" |
+| Link sem `token_hash` | `/link-invalido?motivo=incompleto` |
+
+**O prefixo `pkce_` no token não é defeito.** O `createServerClient` do
+`@supabase/ssr` fixa `flowType: "pkce"` e não aceita sobrescrita, então o
+`{{ .TokenHash }}` dos modelos sai como `pkce_…`. Ainda assim o `/verify` do
+GoTrue aceita esse token e devolve sessão — conferido com uma requisição sem
+cookie algum. A promessa de abrir o link em qualquer aparelho continua valendo;
+não troque `verifyOtp` por `exchangeCodeForSession` achando que está quebrado.
+
 ## Deploy na Vercel
 
 ### 1. Subir o código para o GitHub
@@ -461,7 +481,8 @@ Antes do uso real, falta:
 10. ~~Configurar os e-mails no Supabase~~ — feito: SMTP por um Gmail próprio
     do app (com senha de app), modelos em português com `token_hash`, Site URL
     e Redirect URLs (`/**`) — ver [E-mails](#e-mails-confirmação-de-cadastro-e-recuperação-de-senha).
-    Falta confirmar o teste ponta a ponta do "Esqueci minha senha".
+    Conferido de ponta a ponta no site publicado em 15/10/2026 — ver
+    [Conferência do "Esqueci minha senha"](#conferência-do-esqueci-minha-senha).
 11. ~~Redesenho da estrutura e da navegação~~ — feito: menu lateral no
     desktop, barra inferior no celular, padrão visual único em todas as telas
     e "Tendência" renomeada para "Relatórios".

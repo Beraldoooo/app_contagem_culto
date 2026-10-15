@@ -65,9 +65,16 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
       `https://app-contagem-culto.vercel.app` e Redirect URL `https://app-contagem-culto.vercel.app/**`.
       Banco de produção já tem `supabase/nome-exibicao.sql` aplicado.
 
+- [x] **"Esqueci minha senha" conferido de ponta a ponta no site publicado (2026-10-15)**: formulário → e-mail
+      chegando em menos de 1 min na caixa de entrada (não no spam) → link abrindo `/nova-senha` já com sessão →
+      caminho de gravação da senha liberado. Links inválidos/expirados caem em
+      `/link-invalido?motivo=recuperacao-expirada`, com "Pedir um novo link".
+      Detalhe que parece defeito e não é: com `@supabase/ssr` o `{{ .TokenHash }}` sai com prefixo `pkce_`
+      (`createServerClient` fixa `flowType: "pkce"` e não deixa sobrescrever). Mesmo assim o `/verify` do GoTrue
+      aceita esse token e devolve sessão — testado sem cookie nenhum, ou seja, abrindo em outro aparelho.
+      Não reescrever esse fluxo achando que o `pkce_` está quebrado.
+
 ### O que falta (antes do uso real)
-- [ ] **Confirmar o teste do "Esqueci minha senha"** de ponta a ponta (e-mail chegando e link abrindo `/nova-senha`)
-      — ainda não confirmado pelo Beraldo
 - [ ] **"Recusar" cadastro pendente** em `/admin/usuarios` — pedido pelo Beraldo, ainda não feito. Ideia discutida:
       recusar = `status: banido` com `role` ainda `pendente` (a tela mostra "Recusado"), e "Reconsiderar" devolve
       para `pendente`. Apagar a conta de vez exigiria a chave service_role, que o app não tem.
