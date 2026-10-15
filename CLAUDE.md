@@ -12,7 +12,7 @@ somar o total do dia, guardar o histórico e comparar a frequência ao longo do
 tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
 
 ### Tecnologias
-- **Next.js 16.3** (App Router, `proxy.ts` no lugar de `middleware.ts`) + **React 19** + **TypeScript**
+- **Next.js 16.3.8** (App Router, `proxy.ts` no lugar de `middleware.ts`) + **React 19** + **TypeScript**
 - **Tailwind CSS v4**
 - **Supabase**: Postgres + Auth + RLS (`@supabase/supabase-js` + `@supabase/ssr`); schema em `supabase/schema.sql`
 - **Recharts** no gráfico de tendência
@@ -48,6 +48,11 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
       Banco: `supabase/nome-exibicao.sql`
 - [x] Tema escuro como padrão e tela **Configurações** (`/configuracoes`) para escolher Escuro ou Claro, salvo no
       aparelho (`lib/tema.ts`, `components/seletor-tema.tsx`)
+
+- [x] Segurança das dependências (2026-10-15): Next.js 16.3.4 → 16.3.8 (corrige falhas críticas publicadas) e
+      `npm audit fix` sem `--force`. O que vai para produção tem 0 vulnerabilidades (`npm audit --omit=dev`); os
+      5 avisos restantes são de `eslint-config-next` (só desenvolvimento) e não têm correção sem regredir versão.
+      Nunca rodar `npm audit fix --force`.
 
 ### Convenções de interface
 - Use os tokens de `app/globals.css` (`bg-superficie`, `text-texto-2`, `border-borda`, `bg-marca`, `rounded-cartao`…)

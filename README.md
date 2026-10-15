@@ -11,7 +11,7 @@ cultos e eventos da igreja. A especificação completa está em [CLAUDE.md](./CL
 
 ## Stack
 
-- **Next.js 16** (App Router) + **TypeScript**
+- **Next.js 16.3.8** (App Router) + **TypeScript**
 - **Tailwind CSS v4**
 - **Supabase** (`@supabase/supabase-js` + `@supabase/ssr`)
 - **Recharts** para o gráfico de tendência
