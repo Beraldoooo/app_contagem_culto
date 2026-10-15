@@ -1,12 +1,8 @@
 import Link from "next/link";
 
-import { Cartao, RotuloCartao, Selo } from "@/components/ui/base";
-import {
-  compararComSemanaAnterior,
-  formatarDiferenca,
-  formatarPercentual,
-  type LinhaCulto,
-} from "@/lib/comparativo";
+import { Cartao, RotuloCartao } from "@/components/ui/base";
+import { Variacao } from "@/components/variacao";
+import { compararComSemanaAnterior, type LinhaCulto } from "@/lib/comparativo";
 import { DIAS_SEMANA, diaDaSemana, formatarDataLonga, hojeISO } from "@/lib/datas";
 import { createClient } from "@/lib/supabase/server";
 
@@ -80,7 +76,11 @@ export async function ResumoDoDia() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Variacao diferenca={diferenca} percentual={percentual} />
+            <Variacao
+              diferenca={diferenca}
+              percentual={percentual}
+              className="px-3 py-1 text-sm"
+            />
             <span className="text-xs text-texto-3">
               em {formatarDataLonga(anterior.data)}
             </span>
@@ -110,23 +110,5 @@ export async function ResumoDoDia() {
         Ver os horários deste dia
       </Link>
     </Cartao>
-  );
-}
-
-function Variacao({
-  diferenca,
-  percentual,
-}: {
-  diferenca: number;
-  percentual: number | null;
-}) {
-  const tom = diferenca > 0 ? "sucesso" : diferenca < 0 ? "perigo" : "neutro";
-
-  return (
-    <Selo tom={tom} className="px-3 py-1 text-sm">
-      {diferenca > 0 ? "▲" : diferenca < 0 ? "▼" : "="}{" "}
-      {formatarDiferenca(diferenca)}
-      {percentual !== null ? ` · ${formatarPercentual(percentual)}` : ""}
-    </Selo>
   );
 }

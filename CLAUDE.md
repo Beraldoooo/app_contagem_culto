@@ -37,6 +37,9 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
       "Lançar" em destaque, menu respeitando papéis, padrão visual único (tokens em `app/globals.css`,
       componentes em `components/ui/`) aplicado a todas as telas; "Tendência" virou "Relatórios" (`/relatorios`,
       com `/tendencia` redirecionando)
+- [x] Gráficos "Domingos" e "Quintas" no Início, no estilo do painel do Supabase: uma barra por culto (últimos 12),
+      verde se subiu e vermelha se caiu vs. o mesmo dia da semana anterior, com contagem de aumentos/quedas
+      (`grafico-comparativo.tsx`, `compararCadaData` em `lib/comparativo.ts`)
 - [x] Tema escuro como padrão e tela **Configurações** (`/configuracoes`) para escolher Escuro ou Claro, salvo no
       aparelho (`lib/tema.ts`, `components/seletor-tema.tsx`)
 
