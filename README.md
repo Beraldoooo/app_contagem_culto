@@ -318,8 +318,13 @@ administrador vê nome e e-mail na tela de Usuários.
   não, para não revelar quem usa o app.
 - O link abre `/nova-senha`, onde a senha é trocada. Link vencido ou de outro
   aparelho cai em `/link-invalido` com o botão **Pedir um novo link**.
-- Quem está logado troca a senha em **Configurações → Alterar senha** (mesma
-  tela `/nova-senha`).
+- Quem está logado troca a senha em **Configurações → Alterar senha**, que
+  abre a mesma tela com `?origem=configuracoes`. A origem muda três coisas: o
+  título vira "Alterar senha", aparece um **Cancelar** de volta para
+  Configurações (a tela usa o layout de login, sem menu) e o aviso de sessão
+  expirada deixa de mandar pedir um link de recuperação, que ali não existe.
+- Pedido o link em `/recuperar-senha`, o formulário **continua na tela** abaixo
+  do aviso: quem digitou o e-mail errado pede de novo sem recarregar a página.
 
 ### Conferência do "Esqueci minha senha"
 

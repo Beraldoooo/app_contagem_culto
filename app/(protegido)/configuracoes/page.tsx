@@ -48,7 +48,9 @@ export default async function ConfiguracoesPage() {
             Troque a senha que você usa para entrar no app.
           </p>
         </div>
-        <LinkBotao href="/nova-senha" variante="secundario">
+        {/* A origem faz a tela de senha oferecer a volta para cá e ajusta o
+            texto de sessão expirada, que lá fala em link de recuperação. */}
+        <LinkBotao href="/nova-senha?origem=configuracoes" variante="secundario">
           Alterar senha
         </LinkBotao>
       </Cartao>

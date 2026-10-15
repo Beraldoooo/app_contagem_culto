@@ -8,18 +8,26 @@ import { Campo } from "@/components/campo";
 import { LinkBotao } from "@/components/ui/botao";
 import { definirNovaSenha, type EstadoFormulario } from "@/lib/auth/acoes";
 
-export function FormularioNovaSenha() {
+export function FormularioNovaSenha({
+  daConfiguracoes = false,
+}: {
+  daConfiguracoes?: boolean;
+}) {
   const [estado, acao] = useActionState<EstadoFormulario, FormData>(
     definirNovaSenha,
     {},
   );
 
+  const voltar = daConfiguracoes
+    ? { href: "/configuracoes" as const, rotulo: "Voltar para Configurações" }
+    : { href: "/" as const, rotulo: "Ir para o início" };
+
   if (estado.aviso) {
     return (
       <div className="flex flex-col gap-4">
         <Alerta tom="info">{estado.aviso}</Alerta>
-        <LinkBotao href="/" larguraTotal>
-          Ir para o início
+        <LinkBotao href={voltar.href} larguraTotal>
+          {voltar.rotulo}
         </LinkBotao>
       </div>
     );
@@ -27,6 +35,12 @@ export function FormularioNovaSenha() {
 
   return (
     <form action={acao} className="flex flex-col gap-4">
+      {/* Diz à ação de onde veio: muda o texto de sessão expirada, que no
+          fluxo do e-mail manda pedir um link novo. */}
+      {daConfiguracoes ? (
+        <input type="hidden" name="origem" value="configuracoes" />
+      ) : null}
+
       <Campo
         rotulo="Nova senha"
         name="senha"
@@ -49,6 +63,12 @@ export function FormularioNovaSenha() {
       {estado.erro ? <Alerta tom="erro">{estado.erro}</Alerta> : null}
 
       <BotaoEnviar carregando="Salvando…">Salvar nova senha</BotaoEnviar>
+
+      {daConfiguracoes ? (
+        <LinkBotao href="/configuracoes" variante="discreto" larguraTotal>
+          Cancelar
+        </LinkBotao>
+      ) : null}
     </form>
   );
 }

@@ -14,6 +14,13 @@ export type EstadoFormulario = {
 
 const UM_ANO = 400 * 24 * 60 * 60;
 
+/** Sessão expirada no fluxo do e-mail: a saída é pedir outro link. */
+const SESSAO_EXPIRADA_RECUPERACAO =
+  "Sua sessão expirou. Peça um novo link de recuperação.";
+/** O mesmo caso para quem já estava logado e abriu a tela por Configurações. */
+const SESSAO_EXPIRADA_LOGADO =
+  "Sua sessão expirou. Entre de novo para alterar a senha.";
+
 /** Traduz os erros do Supabase Auth para algo que faça sentido pra quem lê. */
 function traduzirErro(mensagem: string): string {
   const m = mensagem.toLowerCase();
@@ -29,7 +36,7 @@ function traduzirErro(mensagem: string): string {
   if (m.includes("should be different from the old password"))
     return "A nova senha precisa ser diferente da atual.";
   if (m.includes("auth session missing") || m.includes("session not found"))
-    return "Sua sessão expirou. Peça um novo link de recuperação.";
+    return SESSAO_EXPIRADA_RECUPERACAO;
   if (m.includes("rate limit") || m.includes("too many"))
     return "Muitas tentativas seguidas. Espere um minuto e tente de novo.";
   // Falha de rede não é erro de senha: dizer "tente novamente" faria a pessoa
@@ -211,6 +218,12 @@ export async function definirNovaSenha(
 ): Promise<EstadoFormulario> {
   const senha = String(formData.get("senha") ?? "");
   const confirmacao = String(formData.get("confirmacao") ?? "");
+  // Quem abriu a tela por Configurações já estava logado: mandar essa pessoa
+  // "pedir um novo link de recuperação" apontaria para um link que não existe.
+  const daConfiguracoes = formData.get("origem") === "configuracoes";
+  const sessaoExpirada = daConfiguracoes
+    ? SESSAO_EXPIRADA_LOGADO
+    : SESSAO_EXPIRADA_RECUPERACAO;
 
   if (senha.length < 6) {
     return { erro: "A senha precisa ter pelo menos 6 caracteres." };
@@ -224,11 +237,17 @@ export async function definirNovaSenha(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) {
-    return { erro: "Sua sessão expirou. Peça um novo link de recuperação." };
+    return { erro: sessaoExpirada };
   }
 
   const { error } = await supabase.auth.updateUser({ password: senha });
-  if (error) return { erro: traduzirErro(error.message) };
+  if (error) {
+    const traduzido = traduzirErro(error.message);
+    return {
+      erro:
+        traduzido === SESSAO_EXPIRADA_RECUPERACAO ? sessaoExpirada : traduzido,
+    };
+  }
 
   return { aviso: "Senha alterada. Use a nova senha nas próximas vezes que entrar." };
 }

@@ -13,25 +13,36 @@ export function FormularioRecuperacao() {
     {},
   );
 
-  if (estado.aviso) {
-    return <Alerta tom="info">{estado.aviso}</Alerta>;
-  }
-
+  // O formulário continua na tela depois do aviso: quem digitou o e-mail
+  // errado pede de novo ali mesmo, sem recarregar a página.
   return (
-    <form action={acao} className="flex flex-col gap-4">
-      <Campo
-        rotulo="E-mail"
-        name="email"
-        type="email"
-        autoComplete="email"
-        inputMode="email"
-        required
-        placeholder="voce@exemplo.com"
-      />
+    <div className="flex flex-col gap-4">
+      {estado.aviso ? (
+        <div className="flex flex-col gap-2">
+          <Alerta tom="info">{estado.aviso}</Alerta>
+          <p className="text-sm text-texto-2">
+            Não chegou ou digitou errado? Informe o e-mail de novo abaixo.
+          </p>
+        </div>
+      ) : null}
 
-      {estado.erro ? <Alerta tom="erro">{estado.erro}</Alerta> : null}
+      <form action={acao} className="flex flex-col gap-4">
+        <Campo
+          rotulo="E-mail"
+          name="email"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          required
+          placeholder="voce@exemplo.com"
+        />
 
-      <BotaoEnviar carregando="Enviando…">Enviar link</BotaoEnviar>
-    </form>
+        {estado.erro ? <Alerta tom="erro">{estado.erro}</Alerta> : null}
+
+        <BotaoEnviar carregando="Enviando…">
+          {estado.aviso ? "Enviar de novo" : "Enviar link"}
+        </BotaoEnviar>
+      </form>
+    </div>
   );
 }
