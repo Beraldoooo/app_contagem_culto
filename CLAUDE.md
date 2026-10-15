@@ -1,5 +1,46 @@
 # Especificação do Projeto — App de Contagem de Presença (Igreja)
 
+## 0. Estado atual do projeto
+> **Manter esta seção atualizada:** ao terminar cada etapa, marque o item em
+> "O que falta", mova-o para "O que já foi feito" e atualize a data abaixo.
+
+**Última atualização:** 2026-10-15 · **No ar:** https://app-contagem-culto.vercel.app
+
+### O que é
+PWA para a igreja registrar a contagem de presença de cada culto/evento,
+somar o total do dia, guardar o histórico e comparar a frequência ao longo do
+tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
+
+### Tecnologias
+- **Next.js 16.3** (App Router, `proxy.ts` no lugar de `middleware.ts`) + **React 19** + **TypeScript**
+- **Tailwind CSS v4**
+- **Supabase**: Postgres + Auth + RLS (`@supabase/supabase-js` + `@supabase/ssr`); schema em `supabase/schema.sql`
+- **Recharts** no gráfico de tendência
+- **PWA** com manifest e service worker próprios (`public/sw.js`, cache versionado por build)
+- Hospedagem na **Vercel** (deploy automático a cada push na `main`)
+
+### O que já foi feito (MVP completo)
+- [x] Banco modelado com RLS: `profiles`, `horarios_padrao`, `eventos`, `contagens`, view `totais_por_data`
+- [x] Login/cadastro (email + senha, "lembrar-me"), cadastro aberto com aprovação; telas de pendente/banido
+- [x] Painel do Administrador Geral (`/admin/usuarios`): aprovar, promover, banir — com confirmação em dois cliques
+- [x] Lançamento por horário (`/lancamento`): cultos fixos gerados sob demanda, cards independentes, relançar corrige
+- [x] Evento especial avulso com vários horários (`/evento-especial`)
+- [x] Soma automática do dia, atualizando sem recarregar
+- [x] Histórico com filtros e paginação (`/historico`)
+- [x] Comparativo com a semana anterior e gráfico de tendência (`/tendencia`), só com cultos fixos; eventos como marcadores opcionais
+- [x] Auditoria das permissões do Visualizador contra a API real (`supabase/auditoria/visualizador.mjs`)
+- [x] Responsividade, `loading.tsx`, `error.tsx`, `not-found.tsx` e mensagens de erro amigáveis
+- [x] Publicado na Vercel
+
+### O que falta (antes do uso real)
+- [ ] **Limpar os dados de teste** do banco (~86 horários e ~82 contagens fictícias) — **próximo passo**
+- [ ] **Recuperação de senha** ("esqueci minha senha") — hoje só por `update` manual no SQL Editor
+      (a rota `app/auth/confirm/route.ts` já aceita o link de recuperação; faltam as telas e a action)
+- [ ] Conferir a configuração do Supabase em produção (Site URL / Redirect URLs, confirmação de e-mail)
+- [ ] Revisar detalhes de domínio e acabamento visual
+- [ ] Corrigir o `README.md`: o aviso "Estado atual: esqueleto" e o passo "Publicar na Vercel" estão desatualizados
+- [ ] **Fase 2**: envio automático do resumo do dia para o grupo de WhatsApp (adiada)
+
 ## 1. Visão Geral
 Aplicativo web responsivo (PWA) para registrar, somar e arquivar a contagem de pessoas presentes nos cultos, substituindo o processo atual (contagem enviada manualmente num grupo e perdida com o tempo). O sistema guarda o histórico permanentemente e permite comparar a frequência ao longo do tempo.
 
