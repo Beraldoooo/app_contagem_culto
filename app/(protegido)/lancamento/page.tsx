@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { Alerta } from "@/components/alerta";
@@ -13,6 +14,14 @@ import {
 import { LinkBotao } from "@/components/ui/botao";
 import { ehAdmin, obterSessaoAtual, podeLancar } from "@/lib/auth/perfil";
 import {
+  mensagemDetalhada,
+  mensagemSimples,
+  type CultoResumido,
+  type Item,
+  type Resumo,
+  type ValorItem,
+} from "@/lib/contagem";
+import {
   DIAS_SEMANA,
   diaDaSemana,
   ehDataValida,
@@ -22,10 +31,17 @@ import {
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
-import { CartaoHorario, type HorarioDoDia } from "./cartao-horario";
+import { FormularioContagem, type ValoresIniciais } from "./formulario-contagem";
 import { FormularioData } from "./formulario-data";
+import { MensagensDoDia } from "./mensagens-do-dia";
 
 export const metadata: Metadata = { title: "Contagem do dia" };
+
+/** "08:00:00" → "08h" · "14:30:00" → "14h30" */
+function rotuloHorario(horario: string) {
+  const [h, m] = horario.split(":");
+  return m === "00" ? `${h}h` : `${h}h${m}`;
+}
 
 export default async function LancamentoPage({
   searchParams,
@@ -41,9 +57,11 @@ export default async function LancamentoPage({
   const podeExcluir = ehAdmin(sessao.perfil);
 
   const hoje = hojeISO();
-  const { data: dataParam } = await searchParams;
+  const { data: dataParam, evento: eventoParam } = await searchParams;
   const dataSelecionada =
     typeof dataParam === "string" && ehDataValida(dataParam) ? dataParam : null;
+  const eventoSelecionado =
+    typeof eventoParam === "string" ? eventoParam : null;
 
   return (
     <Pagina largura="estreita">
@@ -61,8 +79,9 @@ export default async function LancamentoPage({
       </Cartao>
 
       {dataSelecionada ? (
-        <Horarios
+        <Dia
           data={dataSelecionada}
+          eventoSelecionado={eventoSelecionado}
           podeEditar={podeEditar}
           podeExcluir={podeExcluir}
         />
@@ -73,22 +92,34 @@ export default async function LancamentoPage({
   );
 }
 
-async function Horarios({
+async function Dia({
   data,
+  eventoSelecionado,
   podeEditar,
   podeExcluir,
 }: {
   data: string;
+  eventoSelecionado: string | null;
   podeEditar: boolean;
   podeExcluir: boolean;
 }) {
   const supabase = await createClient();
 
-  const { data: eventos, error } = await supabase
-    .from("eventos")
-    .select("id, nome, horario, tipo")
-    .eq("data", data)
-    .order("horario", { ascending: true });
+  const [{ data: cultos, error }, { data: itensBrutos }] = await Promise.all([
+    supabase
+      .from("resumo_por_evento")
+      .select(
+        "evento_id, nome, horario, tipo, adultos, homens, observacao, criancas, pads, volts, servindo_fora, servindo_dentro, pastoral, lancado, total_simples, total_detalhado",
+      )
+      .eq("data", data)
+      .order("horario", { ascending: true }),
+    supabase
+      .from("itens_contagem")
+      .select("id, codigo, nome, grupo, tem_servindo, tem_publico, soma_em, ordem")
+      .eq("ativo", true)
+      .order("grupo")
+      .order("ordem"),
+  ]);
 
   if (error) {
     return (
@@ -98,44 +129,46 @@ async function Horarios({
     );
   }
 
-  const lista = eventos ?? [];
+  const lista = cultos ?? [];
+  if (lista.length === 0) return <SemCultos data={data} podeEditar={podeEditar} />;
 
-  const { data: contagens } = lista.length
-    ? await supabase
-        .from("contagens")
-        .select("evento_id, quantidade")
-        .in(
-          "evento_id",
-          lista.map((e) => e.id),
-        )
-    : { data: [] };
+  const itens: Item[] = itensBrutos ?? [];
 
-  const porEvento = new Map(
-    (contagens ?? []).map((c) => [c.evento_id, c.quantidade]),
-  );
-
-  const horarios: HorarioDoDia[] = lista.map((evento) => ({
-    id: evento.id,
-    nome: evento.nome,
-    horario: evento.horario,
-    ehEvento: evento.tipo === "evento_especial",
-    quantidade: porEvento.get(evento.id) ?? null,
+  // O mesmo formato que lib/contagem usa, para as mensagens saírem das regras
+  // já testadas em vez de uma segunda conta feita aqui.
+  const resumos: CultoResumido[] = lista.map((c) => ({
+    rotulo: rotuloHorario(c.horario),
+    resumo: {
+      adultos: c.adultos,
+      homens: c.homens,
+      criancas: c.criancas,
+      pads: c.pads,
+      volts: c.volts,
+      servindoFora: c.servindo_fora,
+      servindoDentro: c.servindo_dentro,
+      pastoral: c.pastoral,
+      totalSimples: c.total_simples,
+      totalDetalhado: c.total_detalhado,
+      lancado: c.lancado,
+    } satisfies Resumo,
   }));
 
-  if (horarios.length === 0) {
-    return <SemCultos data={data} podeEditar={podeEditar} />;
-  }
+  const diaSemana = diaDaSemana(data);
+  const simples = mensagemSimples(data, diaSemana, resumos);
+  const detalhada = mensagemDetalhada(data, diaSemana, resumos);
 
-  const lancados = horarios.filter((h) => h.quantidade !== null).length;
-  const pendentes = horarios.length - lancados;
+  const lancados = lista.filter((c) => c.lancado).length;
+  const pendentes = lista.length - lancados;
+  const totalSimples = lista.reduce(
+    (t, c) => (c.lancado ? t + c.total_simples : t),
+    0,
+  );
+  const totalDetalhado = lista.reduce(
+    (t, c) => (c.lancado ? t + c.total_detalhado : t),
+    0,
+  );
 
-  const soma = (apenas: (h: HorarioDoDia) => boolean) =>
-    horarios.reduce((t, h) => (apenas(h) ? t + (h.quantidade ?? 0) : t), 0);
-
-  const total = soma(() => true);
-  const totalCultos = soma((h) => !h.ehEvento);
-  const totalEventos = soma((h) => h.ehEvento);
-  const temEvento = horarios.some((h) => h.ehEvento);
+  const aberto = lista.find((c) => c.evento_id === eventoSelecionado) ?? null;
 
   return (
     <section className="flex flex-col gap-4">
@@ -147,56 +180,88 @@ async function Horarios({
 
       <Cartao>
         <RotuloCartao>Total do dia</RotuloCartao>
-        <p className="mt-2 flex items-baseline gap-1.5">
-          <span className="text-4xl font-bold tabular-nums tracking-tight">
-            {total}
-          </span>
-          <span className="text-sm text-texto-3">
-            {total === 1 ? "pessoa" : "pessoas"}
-          </span>
-        </p>
+        <div className="mt-2 flex flex-wrap items-end gap-x-8 gap-y-3">
+          <p className="flex items-baseline gap-1.5">
+            <span className="text-4xl font-bold tabular-nums tracking-tight">
+              {totalSimples}
+            </span>
+            <span className="text-sm text-texto-3">na congregação</span>
+          </p>
+          <p className="flex items-baseline gap-1.5">
+            <span className="text-2xl font-semibold tabular-nums tracking-tight text-texto-2">
+              {totalDetalhado}
+            </span>
+            <span className="text-sm text-texto-3">com quem serviu</span>
+          </p>
+        </div>
 
-        <p className="mt-2 text-xs text-texto-3">
-          {lancados} de {horarios.length}{" "}
-          {horarios.length === 1 ? "horário lançado" : "horários lançados"}
+        <p className="mt-3 text-xs text-texto-3">
+          {lancados} de {lista.length}{" "}
+          {lista.length === 1 ? "horário lançado" : "horários lançados"}
           {pendentes > 0
             ? ` · ${pendentes} ${pendentes === 1 ? "pendente" : "pendentes"}`
             : " · dia completo"}
         </p>
-
-        {/* Com evento especial no mesmo dia, um número só enganaria: ele não é
-            comparável com outro domingo. A quebra deixa isso à vista. */}
-        {temEvento ? (
-          <dl className="mt-4 flex flex-col gap-1.5 border-t border-borda pt-4 text-sm">
-            <div className="flex items-center justify-between gap-3">
-              <dt className="text-texto-2">Cultos</dt>
-              <dd className="font-medium tabular-nums">{totalCultos}</dd>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <dt className="text-texto-2">Eventos especiais</dt>
-              <dd className="font-medium tabular-nums">{totalEventos}</dd>
-            </div>
-          </dl>
-        ) : null}
-
-        {pendentes > 0 ? (
-          <p className="mt-3 text-xs text-aviso-texto">
-            Ainda falta lançar {pendentes}{" "}
-            {pendentes === 1 ? "horário" : "horários"} — o total vai subir.
-          </p>
-        ) : null}
       </Cartao>
 
-      <ul className="flex flex-col gap-3">
-        {horarios.map((horario) => (
-          <CartaoHorario
-            key={horario.id}
-            horario={horario}
-            podeEditar={podeEditar}
-            podeExcluir={podeExcluir}
-          />
-        ))}
+      <ul className="flex flex-col gap-2">
+        {lista.map((culto) => {
+          const selecionado = culto.evento_id === aberto?.evento_id;
+          return (
+            <li key={culto.evento_id}>
+              <Link
+                href={
+                  selecionado
+                    ? `/lancamento?data=${data}`
+                    : `/lancamento?data=${data}&evento=${culto.evento_id}`
+                }
+                aria-current={selecionado ? "true" : undefined}
+                className={`flex items-center justify-between gap-3 rounded-cartao border px-4 py-3 transition ${
+                  selecionado
+                    ? "border-marca bg-marca-suave"
+                    : "border-borda bg-superficie hover:border-borda-forte"
+                }`}
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium">
+                    {culto.nome}
+                  </span>
+                  <span className="block text-xs text-texto-3">
+                    {culto.tipo === "evento_especial" ? "Evento · " : ""}
+                    {rotuloHorario(culto.horario)}
+                  </span>
+                </span>
+                {culto.lancado ? (
+                  <span className="shrink-0 rounded-campo bg-sucesso-suave px-2.5 py-1 text-xs font-medium tabular-nums text-sucesso-texto">
+                    ✓ {culto.total_simples}
+                  </span>
+                ) : (
+                  <span className="shrink-0 rounded-campo bg-aviso-suave px-2.5 py-1 text-xs font-medium text-aviso-texto">
+                    pendente
+                  </span>
+                )}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
+
+      {aberto ? (
+        <FormularioDoCulto
+          culto={aberto}
+          itens={itens}
+          podeEditar={podeEditar}
+          podeExcluir={podeExcluir}
+        />
+      ) : (
+        <p className="text-xs text-texto-3">
+          {podeEditar
+            ? "Toque num horário acima para lançar ou corrigir a contagem."
+            : "Toque num horário acima para ver os números."}
+        </p>
+      )}
+
+      <MensagensDoDia simples={simples} detalhada={detalhada} />
 
       {podeEditar ? (
         <LinkBotao href={`/evento-especial?data=${data}`} variante="secundario">
@@ -209,6 +274,129 @@ async function Horarios({
         lançar aparece aqui sem precisar recarregar.
       </p>
     </section>
+  );
+}
+
+async function FormularioDoCulto({
+  culto,
+  itens,
+  podeEditar,
+  podeExcluir,
+}: {
+  culto: { evento_id: string; nome: string; adultos: number | null; homens: number | null; observacao: string | null; lancado: boolean };
+  itens: Item[];
+  podeEditar: boolean;
+  podeExcluir: boolean;
+}) {
+  const supabase = await createClient();
+
+  const { data: linhas } = await supabase
+    .from("contagens_itens")
+    .select("servindo, publico, itens_contagem!inner(codigo), contagens!inner(evento_id)")
+    .eq("contagens.evento_id", culto.evento_id);
+
+  const porCodigo: Record<string, ValorItem> = {};
+  for (const linha of linhas ?? []) {
+    porCodigo[linha.itens_contagem.codigo] = {
+      servindo: linha.servindo,
+      publico: linha.publico,
+    };
+  }
+
+  const iniciais: ValoresIniciais = {
+    adultos: culto.adultos,
+    homens: culto.homens,
+    observacao: culto.observacao ?? "",
+    itens: porCodigo,
+  };
+
+  if (!podeEditar) {
+    return <SomenteLeitura culto={culto} itens={itens} iniciais={iniciais} />;
+  }
+
+  return (
+    <FormularioContagem
+      key={culto.evento_id}
+      eventoId={culto.evento_id}
+      nomeCulto={culto.nome}
+      itens={itens}
+      iniciais={iniciais}
+      jaLancado={culto.lancado}
+      podeExcluir={podeExcluir}
+    />
+  );
+}
+
+/** Visualizador vê os mesmos números, sem um campo sequer para editar. */
+function SomenteLeitura({
+  culto,
+  itens,
+  iniciais,
+}: {
+  culto: { nome: string; lancado: boolean };
+  itens: Item[];
+  iniciais: ValoresIniciais;
+}) {
+  if (!culto.lancado) {
+    return (
+      <Cartao>
+        <p className="text-sm text-texto-2">
+          {culto.nome} ainda não foi lançado.
+        </p>
+      </Cartao>
+    );
+  }
+
+  const comValor = itens.filter((i) => {
+    const v = iniciais.itens[i.codigo];
+    return v && (v.servindo !== null || v.publico !== null);
+  });
+
+  return (
+    <Cartao as="section">
+      <RotuloCartao>{culto.nome}</RotuloCartao>
+      <dl className="mt-3 flex flex-col gap-1.5 text-sm">
+        <Linha rotulo="Adultos" valor={iniciais.adultos} />
+        {iniciais.homens !== null ? (
+          <Linha rotulo="Homens" valor={iniciais.homens} />
+        ) : null}
+        {comValor.map((item) => (
+          <Linha
+            key={item.codigo}
+            rotulo={item.nome}
+            valor={iniciais.itens[item.codigo].servindo}
+            publico={iniciais.itens[item.codigo].publico}
+          />
+        ))}
+      </dl>
+      {iniciais.observacao ? (
+        <p className="mt-4 border-t border-borda pt-3 text-sm text-texto-2">
+          {iniciais.observacao}
+        </p>
+      ) : null}
+    </Cartao>
+  );
+}
+
+function Linha({
+  rotulo,
+  valor,
+  publico,
+}: {
+  rotulo: string;
+  valor: number | null;
+  publico?: number | null;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <dt className="text-texto-2">{rotulo}</dt>
+      <dd className="font-medium tabular-nums">
+        {valor !== null && valor !== undefined ? valor : "—"}
+        {publico !== null && publico !== undefined ? (
+          <span className="ml-2 text-texto-3">· {publico} crianças</span>
+        ) : null}
+      </dd>
+    </div>
   );
 }
 
@@ -231,7 +419,8 @@ function SemCultos({
           Não há culto fixo em <strong className="font-medium">{diaSemana}</strong>.
         </p>
         <p className="mt-2 text-texto-2">
-          Os horários fixos são domingo (8h, 10h e 18h) e quinta-feira (20h).
+          Os horários fixos são domingo (8h, 10h e 18h), quarta (14h30) e
+          quinta-feira (20h).
           {podeEditar
             ? " Para uma data fora da rotina, cadastre um evento especial."
             : " Nenhum evento especial foi cadastrado nesta data."}
@@ -258,6 +447,10 @@ function ReferenciaHorarios() {
         <div className="flex items-center justify-between gap-4">
           <dt className="text-texto-2">Domingo</dt>
           <dd className="font-medium">8h · 10h · 18h</dd>
+        </div>
+        <div className="flex items-center justify-between gap-4">
+          <dt className="text-texto-2">Quarta-feira</dt>
+          <dd className="font-medium">14h30 · Culto da Esperança</dd>
         </div>
         <div className="flex items-center justify-between gap-4">
           <dt className="text-texto-2">Quinta-feira</dt>

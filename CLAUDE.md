@@ -84,8 +84,13 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
 - [ ] **"Recusar" cadastro pendente** em `/admin/usuarios` — pedido pelo Beraldo, ainda não feito. Ideia discutida:
       recusar = `status: banido` com `role` ainda `pendente` (a tela mostra "Recusado"), e "Reconsiderar" devolve
       para `pendente`. Apagar a conta de vez exigiria a chave service_role, que o app não tem.
-- [ ] **Remodelar a contagem** conforme a seção 0.1 — o app guarda um número por horário e a igreja conta
-      por categoria e por ministério. Fazer **antes** de a igreja começar a usar e antes de importar 2024/2025.
+- [x] **Remodelar a contagem** (16/10/2026): banco, regras e tela de lançamento prontos.
+      `supabase/contagem-por-categoria.sql` já rodado em produção. As duas mensagens do grupo saem da tela,
+      com botão de copiar. Testes: `supabase/auditoria/contagem.mjs` (42) e `scripts/teste-contagem.ts` (36).
+- [ ] **Conferir o salvamento de ponta a ponta** — só o caminho de leitura foi testado no navegador; a conta
+      de teste é visualizador e não escreve. O Beraldo testa como admin.
+- [ ] Relatórios: gráfico de homens ao longo do tempo, comparado com a Arena (ministério de homens)
+- [ ] Remover `contagens.quantidade`, que ficou obsoleta mas foi mantida para o deploy não quebrar
 - [ ] **Importar as planilhas de 2024 e 2025** (ver 0.1). Só depois do modelo certo, e nunca direto em produção.
 - [ ] **Fase 2**: envio automático do resumo do dia para o grupo de WhatsApp — por último, mas é a prioridade
       mais importante para o Beraldo. A seção 0.1 já traz o formato exato das mensagens.
