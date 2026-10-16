@@ -41,8 +41,15 @@ if (perfil.role !== "visualizador") {
 
 // alvos existentes para tentar alterar
 const ev = await (await fetch(`${U}/rest/v1/eventos?select=id,data,horario,tipo&order=data.desc&limit=5`, { headers: H })).json();
-const ct = await (await fetch(`${U}/rest/v1/contagens?select=id,evento_id,quantidade&limit=1`, { headers: H })).json();
+// "adultos", não "quantidade": a coluna velha é sempre nula agora, e comparar
+// nulo com nulo deixava o "nada foi alterado" passar sem provar nada.
+const ct = await (await fetch(`${U}/rest/v1/contagens?select=id,evento_id,adultos,eventos!inner(horario)&adultos=not.is.null&limit=1`, { headers: H })).json();
 const alvoEvento = ev[0], alvoContagem = ct[0];
+const it = alvoContagem
+  ? await (await fetch(`${U}/rest/v1/contagens_itens?select=id,item_id,servindo,publico&contagem_id=eq.${alvoContagem.id}&limit=1`, { headers: H })).json()
+  : [];
+const alvoItem = it[0];
+const itens = await (await fetch(`${U}/rest/v1/itens_contagem?select=id&limit=1`, { headers: H })).json();
 
 console.log("=== LEITURA — tudo deve funcionar (Fases 3 e 4) ===");
 // Os filtros saem do que existe no banco agora, e não de datas fixas: com
@@ -50,17 +57,18 @@ console.log("=== LEITURA — tudo deve funcionar (Fases 3 e 4) ===");
 // mudavam, sem nada de errado nas permissões.
 const umaData = alvoEvento?.data;
 const temEspecial = ev.some((e) => e.tipo === "evento_especial");
-const umHorario = ev.find((e) => e.tipo === "culto_fixo")?.horario;
+// O horário de um culto que TEM contagem; o primeiro da lista podia não ter.
+const umHorario = alvoContagem?.eventos?.horario;
 
 const leituras = [
   ["dashboard: totais por data",      `totais_por_data?select=data,total_cultos&tem_culto_fixo=is.true&order=data.desc&limit=5`, ev.length],
   ["histórico: com filtro de período", umaData && `totais_por_data?select=data,total&data=gte.${umaData}&data=lte.${umaData}`, ev.length],
   ["histórico: filtro por tipo",       `totais_por_data?select=data&tem_evento_especial=is.true`, temEspecial],
-  ["gráfico: série de um horário",     umHorario && `contagens?select=quantidade,eventos!inner(data,horario)&eventos.tipo=eq.culto_fixo&eventos.horario=eq.${umHorario}&limit=5`, ct.length],
-  ["gráfico: eventos especiais",       `contagens?select=quantidade,eventos!inner(data,nome)&eventos.tipo=eq.evento_especial`, temEspecial && ct.length],
+  ["gráfico: série de um horário",     umHorario && `resumo_por_evento?select=data,total_simples&tipo=eq.culto_fixo&horario=eq.${umHorario}&lancado=is.true&limit=5`, ct.length],
+  ["gráfico: eventos especiais",       `resumo_por_evento?select=data,nome,total_simples&tipo=eq.evento_especial&lancado=is.true`, temEspecial && ct.length],
   ["gráfico: opções de horário",       `horarios_padrao?select=dia_semana,horario,nome&ativo=is.true`, true],
   ["detalhe do dia: eventos",          umaData && `eventos?select=id,nome,horario,tipo&data=eq.${umaData}`, ev.length],
-  ["detalhe do dia: contagens",        `contagens?select=evento_id,quantidade&limit=5`, ct.length],
+  ["detalhe do dia: contagens",        `contagens_itens?select=servindo,publico&limit=5`, ct.length],
   ["próprio perfil",                   `profiles?select=email,role,status`, true],
 ];
 for (const [rotulo, caminho, temDado] of leituras) {
@@ -83,8 +91,11 @@ for (const [rotulo, caminho, temDado] of leituras) {
 console.log("\n=== ESCRITA — tudo deve ser bloqueado ===");
 const bloqueado = (r, corpo) => r.status === 403 || r.status === 401 || (r.ok && Array.isArray(corpo) && corpo.length === 0);
 const escritas = [
-  ["INSERT contagem nova", "POST",   `contagens`, { evento_id: ev.find(e=>e.id!==alvoContagem?.evento_id)?.id ?? alvoEvento.id, quantidade: 999, lancado_por: s.user.id }],
-  ["UPDATE contagem",      "PATCH",  `contagens?id=eq.${alvoContagem?.id}`, { quantidade: 999 }],
+  ["INSERT contagem nova", "POST",   `contagens`, { evento_id: ev.find(e=>e.id!==alvoContagem?.evento_id)?.id ?? alvoEvento.id, adultos: 999, lancado_por: s.user.id }],
+  ["UPDATE contagem",      "PATCH",  `contagens?id=eq.${alvoContagem?.id}`, { adultos: 999 }],
+  ["INSERT ministério",    "POST",   `contagens_itens`, { contagem_id: alvoContagem?.id, item_id: itens[0]?.id, servindo: 999 }],
+  ["UPDATE ministério",    "PATCH",  `contagens_itens?id=eq.${alvoItem?.id}`, { servindo: 999 }],
+  ["DELETE ministério",    "DELETE", `contagens_itens?id=eq.${alvoItem?.id}`, null],
   ["DELETE contagem",      "DELETE", `contagens?id=eq.${alvoContagem?.id}`, null],
   ["INSERT evento",        "POST",   `eventos`, { tipo: "evento_especial", nome: "Invasao", data: "2026-09-19", horario: "23:00", created_by: s.user.id }],
   ["UPDATE evento",        "PATCH",  `eventos?id=eq.${alvoEvento.id}`, { nome: "Alterado" }],
@@ -123,9 +134,9 @@ console.log("\n=== NADA FOI ALTERADO? ===");
 if (!alvoContagem) {
   pula("contagem intacta", "não havia contagem no banco");
 } else {
-  const depois = await (await fetch(`${U}/rest/v1/contagens?select=id,quantidade&id=eq.${alvoContagem.id}`, { headers: H })).json();
-  if (depois[0]?.quantidade === alvoContagem.quantidade) {
-    bom(`contagem intacta (${alvoContagem.quantidade})`);
+  const depois = await (await fetch(`${U}/rest/v1/contagens?select=id,adultos&id=eq.${alvoContagem.id}`, { headers: H })).json();
+  if (depois[0]?.adultos === alvoContagem.adultos) {
+    bom(`contagem intacta (${alvoContagem.adultos} adultos)`);
   } else {
     ruim("contagem foi alterada!", JSON.stringify(depois));
   }
@@ -149,8 +160,8 @@ console.log(
 );
 if (pulado && !falhou) {
   console.log(
-    "\x1b[90mAs puladas não indicam problema: o banco está sem contagens.\n" +
-      "Rode de novo depois do primeiro culto lançado para cobrir tudo.\x1b[0m",
+    "\x1b[90mAs puladas não indicam problema: falta no banco o tipo de dado que\n" +
+      "elas testam (contagem lançada, evento especial). Rode de novo quando houver.\x1b[0m",
   );
 }
 process.exit(falhou ? 1 : 0);
