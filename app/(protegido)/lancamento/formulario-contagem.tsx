@@ -380,12 +380,14 @@ function Total({
       : "bg-evento-suave text-evento-texto";
 
   return (
-    <div className={`flex items-baseline justify-between gap-3 rounded-campo px-3.5 py-2.5 ${cores}`}>
+    // items-center, não items-baseline: o rótulo tem duas linhas, e alinhar
+    // pela base da primeira deixava o número grudado no alto do bloco.
+    <div className={`flex items-center justify-between gap-3 rounded-campo px-3.5 py-2.5 ${cores}`}>
       <span className="text-sm font-medium">
         {rotulo}
         <span className="block text-xs font-normal opacity-80">{nota}</span>
       </span>
-      <span className="text-2xl font-bold tabular-nums tracking-tight">{valor}</span>
+      <span className="text-2xl leading-none font-bold tabular-nums tracking-tight">{valor}</span>
     </div>
   );
 }
