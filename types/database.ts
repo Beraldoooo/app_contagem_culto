@@ -16,6 +16,11 @@ export type UserRole = "admin_geral" | "contador" | "visualizador" | "pendente";
 export type UserStatus = "pendente" | "aprovado" | "banido";
 export type EventoTipo = "culto_fixo" | "evento_especial";
 
+/** Onde a equipe serve. "pastoral" é separado porque vai em linha própria nas mensagens. */
+export type ItemGrupo = "fora" | "dentro" | "pastoral";
+/** Em qual linha do resumo o público de um item é somado. */
+export type SomaEm = "criancas" | "pads" | "volts";
+
 export type Database = {
   public: {
     Tables: {
@@ -108,7 +113,11 @@ export type Database = {
         Row: {
           id: string;
           evento_id: string;
-          quantidade: number;
+          /** @deprecated substituída por adultos + contagens_itens; sai num script futuro. */
+          quantidade: number | null;
+          adultos: number | null;
+          homens: number | null;
+          observacao: string | null;
           lancado_por: string | null;
           created_at: string;
           updated_at: string;
@@ -116,7 +125,10 @@ export type Database = {
         Insert: {
           id?: string;
           evento_id: string;
-          quantidade: number;
+          quantidade?: number | null;
+          adultos?: number | null;
+          homens?: number | null;
+          observacao?: string | null;
           lancado_por?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -124,7 +136,10 @@ export type Database = {
         Update: {
           id?: string;
           evento_id?: string;
-          quantidade?: number;
+          quantidade?: number | null;
+          adultos?: number | null;
+          homens?: number | null;
+          observacao?: string | null;
           lancado_por?: string | null;
           created_at?: string;
           updated_at?: string;
@@ -140,8 +155,112 @@ export type Database = {
           },
         ];
       };
+      itens_contagem: {
+        Row: {
+          id: string;
+          codigo: string;
+          nome: string;
+          grupo: ItemGrupo;
+          tem_servindo: boolean;
+          tem_publico: boolean;
+          /** Em qual linha do resumo o público deste item soma. */
+          soma_em: SomaEm | null;
+          ordem: number;
+          ativo: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          codigo: string;
+          nome: string;
+          grupo: ItemGrupo;
+          tem_servindo?: boolean;
+          tem_publico?: boolean;
+          soma_em?: SomaEm | null;
+          ordem: number;
+          ativo?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          codigo?: string;
+          nome?: string;
+          grupo?: ItemGrupo;
+          tem_servindo?: boolean;
+          tem_publico?: boolean;
+          soma_em?: SomaEm | null;
+          ordem?: number;
+          ativo?: boolean;
+        };
+        Relationships: [];
+      };
+      contagens_itens: {
+        Row: {
+          id: string;
+          contagem_id: string;
+          item_id: string;
+          servindo: number | null;
+          publico: number | null;
+        };
+        Insert: {
+          id?: string;
+          contagem_id: string;
+          item_id: string;
+          servindo?: number | null;
+          publico?: number | null;
+        };
+        Update: {
+          id?: string;
+          contagem_id?: string;
+          item_id?: string;
+          servindo?: number | null;
+          publico?: number | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "contagens_itens_contagem_id_fkey";
+            columns: ["contagem_id"];
+            isOneToOne: false;
+            referencedRelation: "contagens";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "contagens_itens_item_id_fkey";
+            columns: ["item_id"];
+            isOneToOne: false;
+            referencedRelation: "itens_contagem";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: {
+      resumo_por_evento: {
+        Row: {
+          evento_id: string;
+          data: string;
+          horario: string;
+          tipo: EventoTipo;
+          nome: string;
+          contagem_id: string | null;
+          adultos: number | null;
+          homens: number | null;
+          observacao: string | null;
+          lancado_por: string | null;
+          updated_at: string | null;
+          /** null quando a categoria não foi contada — diferente de 0. */
+          criancas: number | null;
+          pads: number | null;
+          volts: number | null;
+          servindo_fora: number;
+          servindo_dentro: number;
+          pastoral: number;
+          lancado: boolean;
+          total_simples: number;
+          total_detalhado: number;
+        };
+        Relationships: [];
+      };
       totais_por_data: {
         Row: {
           data: string;
@@ -150,12 +269,14 @@ export type Database = {
           horarios: number;
           horarios_lancados: number;
           total: number;
+          total_detalhado: number;
           horarios_cultos: number;
           lancados_cultos: number;
           total_cultos: number;
           horarios_eventos: number;
           lancados_eventos: number;
           total_eventos: number;
+          homens_cultos: number;
         };
         Relationships: [];
       };
@@ -174,6 +295,7 @@ export type Database = {
       user_role: UserRole;
       user_status: UserStatus;
       evento_tipo: EventoTipo;
+      item_grupo: ItemGrupo;
     };
     CompositeTypes: Record<string, never>;
   };

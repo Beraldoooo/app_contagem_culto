@@ -72,17 +72,20 @@ export default async function RelatoriosPage({
 
     for (const linha of data ?? []) regulares.set(linha.data, linha.total_cultos);
   } else {
+    // resumo_por_evento já soma as categorias; "contagens" sozinha não tem
+    // mais o número do culto, só o cabeçalho.
     const { data } = await supabase
-      .from("contagens")
-      .select("quantidade, eventos!inner(data, horario, tipo)")
-      .eq("eventos.tipo", "culto_fixo")
-      .eq("eventos.horario", serieValida)
-      .lte("eventos.data", hoje)
-      .order("eventos(data)", { ascending: false })
+      .from("resumo_por_evento")
+      .select("data, total_simples")
+      .eq("tipo", "culto_fixo")
+      .eq("horario", serieValida)
+      .eq("lancado", true)
+      .lte("data", hoje)
+      .order("data", { ascending: false })
       .limit(LIMITE_PONTOS);
 
     for (const linha of data ?? [])
-      regulares.set(linha.eventos.data, linha.quantidade);
+      regulares.set(linha.data, linha.total_simples);
   }
 
   // --- marcadores: eventos especiais ----------------------------------------
@@ -92,20 +95,21 @@ export default async function RelatoriosPage({
     const maisAntiga = [...regulares.keys()].sort()[0];
 
     const { data } = await supabase
-      .from("contagens")
-      .select("quantidade, eventos!inner(data, nome, tipo)")
-      .eq("eventos.tipo", "evento_especial")
-      .gte("eventos.data", maisAntiga)
-      .lte("eventos.data", hoje)
-      .order("eventos(data)", { ascending: false })
+      .from("resumo_por_evento")
+      .select("data, nome, total_simples")
+      .eq("tipo", "evento_especial")
+      .eq("lancado", true)
+      .gte("data", maisAntiga)
+      .lte("data", hoje)
+      .order("data", { ascending: false })
       .limit(LIMITE_PONTOS);
 
     // Vários horários no mesmo evento somam num marcador só por data.
     for (const linha of data ?? []) {
-      const atual = eventos.get(linha.eventos.data);
-      eventos.set(linha.eventos.data, {
-        quantidade: (atual?.quantidade ?? 0) + linha.quantidade,
-        nome: atual?.nome ?? linha.eventos.nome,
+      const atual = eventos.get(linha.data);
+      eventos.set(linha.data, {
+        quantidade: (atual?.quantidade ?? 0) + linha.total_simples,
+        nome: atual?.nome ?? linha.nome,
       });
     }
   }
