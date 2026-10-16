@@ -181,7 +181,7 @@ export function FormularioContagem({
 
         <dl className="mt-4 flex flex-col gap-2 rounded-campo bg-marca-suave px-3.5 py-3 text-sm">
           <Derivado rotulo="Crianças" valor={resumo.criancas} destaque />
-          <Derivado rotulo="PADS" valor={resumo.pads} destaque />
+          <Derivado rotulo="Pads" valor={resumo.pads} destaque />
           <Derivado rotulo="Volts" valor={resumo.volts} destaque />
         </dl>
 

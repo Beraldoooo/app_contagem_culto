@@ -64,7 +64,7 @@ insert into public.itens_contagem (codigo, nome, grupo, tem_servindo, tem_public
   ('bercario',          'Berçário',          'fora',     true,  true,  'criancas',  3),
   ('maternal',          'Maternal',          'fora',     true,  true,  'criancas',  4),
   ('kids',              'Kids',              'fora',     true,  true,  'criancas',  5),
-  ('pads',              'PADS',              'fora',     true,  true,  'pads',      6),
+  ('pads',              'Pads',              'fora',     true,  true,  'pads',      6),
   ('volts',             'Volts',             'fora',     true,  true,  'volts',     7),
   -- A equipe pastoral é "dentro", mas vai em linha própria nas mensagens.
   ('pastores',          'Pastores',          'pastoral', true,  false, null,        1),
@@ -77,7 +77,15 @@ insert into public.itens_contagem (codigo, nome, grupo, tem_servindo, tem_public
   ('hospitalidade',     'Hospitalidade',     'dentro',   true,  false, null,        6),
   ('dizimos',           'Dízimos',           'dentro',   true,  false, null,        7),
   ('livraria',          'Livraria',          'dentro',   true,  false, null,        8)
-on conflict (codigo) do nothing;
+-- do update, e não do nothing: assim rodar o script de novo sincroniza nomes,
+-- ordem e flags. A lista é referência mantida aqui, não dado do usuário.
+on conflict (codigo) do update set
+  nome         = excluded.nome,
+  grupo        = excluded.grupo,
+  tem_servindo = excluded.tem_servindo,
+  tem_publico  = excluded.tem_publico,
+  soma_em      = excluded.soma_em,
+  ordem        = excluded.ordem;
 
 
 -- -----------------------------------------------------------------------------
