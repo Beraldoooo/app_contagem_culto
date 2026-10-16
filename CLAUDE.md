@@ -87,8 +87,9 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
 - [x] **Remodelar a contagem** (16/10/2026): banco, regras e tela de lançamento prontos.
       `supabase/contagem-por-categoria.sql` já rodado em produção. As duas mensagens do grupo saem da tela,
       com botão de copiar. Testes: `supabase/auditoria/contagem.mjs` (42) e `scripts/teste-contagem.ts` (36).
-- [ ] **Conferir o salvamento de ponta a ponta** — só o caminho de leitura foi testado no navegador; a conta
-      de teste é visualizador e não escreve. O Beraldo testa como admin.
+- [x] **Salvamento conferido de ponta a ponta** (16/10/2026), com a conta de teste promovida a contador por um
+      tempo e depois devolvida a visualizador. Em seguida o banco foi zerado (`supabase/zerar-lancamentos.sql`):
+      0 eventos e 0 contagens, com usuários, os 16 ministérios e os 5 horários fixos mantidos.
 - [ ] Relatórios: gráfico de homens ao longo do tempo, comparado com a Arena (ministério de homens)
 - [ ] Remover `contagens.quantidade`, que ficou obsoleta mas foi mantida para o deploy não quebrar
 - [ ] **Importar as planilhas de 2024 e 2025** (ver 0.1). Só depois do modelo certo, e nunca direto em produção.
