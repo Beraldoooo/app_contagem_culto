@@ -4,6 +4,15 @@ import type { HTMLAttributes, ReactNode } from "react";
 export const classesCampo =
   "h-11 w-full min-w-0 rounded-campo border border-borda-forte bg-superficie px-3 text-base text-texto outline-none transition placeholder:text-texto-3 focus:border-marca focus:ring-3 focus:ring-marca/15 disabled:opacity-60";
 
+/**
+ * Campo de várias linhas. Mesma aparência, mas sem a altura fixa de
+ * `classesCampo`: o `h-11` é feito para uma linha só e cortava a segunda
+ * linha de um textarea, inclusive o próprio texto de exemplo.
+ */
+export const classesCampoMultilinha = classesCampo
+  .replace("h-11", "min-h-[5.25rem] py-2.5")
+  .concat(" resize-y leading-relaxed");
+
 /** Rótulo pequeno acima de um campo. */
 export const classesRotulo = "text-sm font-medium text-texto";
 

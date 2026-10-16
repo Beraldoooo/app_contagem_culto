@@ -5,7 +5,12 @@ import { useActionState, useMemo, useState } from "react";
 import { AcaoConfirmada } from "@/components/acao-confirmada";
 import { Alerta } from "@/components/alerta";
 import { BotaoEnviar } from "@/components/botao-enviar";
-import { Cartao, RotuloCartao, classesCampo } from "@/components/ui/base";
+import {
+  Cartao,
+  RotuloCartao,
+  classesCampo,
+  classesCampoMultilinha,
+} from "@/components/ui/base";
 import {
   resumir,
   type Item,
@@ -219,7 +224,7 @@ export function FormularioContagem({
           maxLength={500}
           rows={2}
           placeholder="ex.: mais cinco da projeção que chegaram depois"
-          className={`${classesCampo} mt-3 resize-y`}
+          className={`${classesCampoMultilinha} mt-3`}
         />
       </Cartao>
 

@@ -89,9 +89,9 @@ function Mensagem({
           <RotuloCartao>{titulo}</RotuloCartao>
           <p className="mt-1 text-xs text-texto-3">{nota}</p>
         </div>
-        <Botao tamanho="sm" onClick={copiar}>
-          Copiar
-        </Botao>
+        {/* Tamanho cheio (44px): é um botão de dedo, no celular, e o "sm"
+            deixava o alvo em 36px. */}
+        <Botao onClick={copiar}>Copiar</Botao>
       </div>
 
       {aviso ? (

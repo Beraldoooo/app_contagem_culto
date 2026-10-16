@@ -105,7 +105,10 @@ export async function ResumoDoDia() {
 
       <Link
         href={`/lancamento?data=${atual.data}`}
-        className="text-sm font-medium text-marca-texto hover:underline underline-offset-4"
+        /* inline-flex com altura mínima: como link de texto o alvo ficava com
+           20px, difícil de acertar com o dedo. O -my compensa a altura extra
+           para o espaçamento do cartão não mudar. */
+        className="-my-2.5 inline-flex min-h-11 items-center text-sm font-medium text-marca-texto underline-offset-4 hover:underline"
       >
         Ver os horários deste dia
       </Link>
