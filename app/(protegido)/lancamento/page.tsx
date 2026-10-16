@@ -105,21 +105,33 @@ async function Dia({
 }) {
   const supabase = await createClient();
 
-  const [{ data: cultos, error }, { data: itensBrutos }] = await Promise.all([
-    supabase
-      .from("resumo_por_evento")
-      .select(
-        "evento_id, nome, horario, tipo, adultos, homens, observacao, criancas, pads, volts, servindo_fora, servindo_dentro, pastoral, lancado, total_simples, total_detalhado",
-      )
-      .eq("data", data)
-      .order("horario", { ascending: true }),
-    supabase
-      .from("itens_contagem")
-      .select("id, codigo, nome, grupo, tem_servindo, tem_publico, soma_em, ordem")
-      .eq("ativo", true)
-      .order("grupo")
-      .order("ordem"),
-  ]);
+  // As três consultas saem juntas. Antes, a dos ministérios do culto aberto
+  // só começava depois das outras duas terminarem — uma ida ao banco em fila
+  // que a tela esperava à toa.
+  const [{ data: cultos, error }, { data: itensBrutos }, { data: itensDoCulto }] =
+    await Promise.all([
+      supabase
+        .from("resumo_por_evento")
+        .select(
+          "evento_id, nome, horario, tipo, adultos, homens, observacao, criancas, pads, volts, servindo_fora, servindo_dentro, pastoral, lancado, total_simples, total_detalhado",
+        )
+        .eq("data", data)
+        .order("horario", { ascending: true }),
+      supabase
+        .from("itens_contagem")
+        .select("id, codigo, nome, grupo, tem_servindo, tem_publico, soma_em, ordem")
+        .eq("ativo", true)
+        .order("grupo")
+        .order("ordem"),
+      eventoSelecionado
+        ? supabase
+            .from("contagens_itens")
+            .select(
+              "servindo, publico, itens_contagem!inner(codigo), contagens!inner(evento_id)",
+            )
+            .eq("contagens.evento_id", eventoSelecionado)
+        : Promise.resolve({ data: [] as never[] }),
+    ]);
 
   if (error) {
     return (
@@ -169,6 +181,14 @@ async function Dia({
   );
 
   const aberto = lista.find((c) => c.evento_id === eventoSelecionado) ?? null;
+
+  const porCodigo: Record<string, ValorItem> = {};
+  for (const linha of itensDoCulto ?? []) {
+    porCodigo[linha.itens_contagem.codigo] = {
+      servindo: linha.servindo,
+      publico: linha.publico,
+    };
+  }
 
   return (
     <section className="flex flex-col gap-4">
@@ -250,6 +270,7 @@ async function Dia({
         <FormularioDoCulto
           culto={aberto}
           itens={itens}
+          valoresItens={porCodigo}
           podeEditar={podeEditar}
           podeExcluir={podeExcluir}
         />
@@ -277,31 +298,20 @@ async function Dia({
   );
 }
 
-async function FormularioDoCulto({
+function FormularioDoCulto({
   culto,
   itens,
+  valoresItens,
   podeEditar,
   podeExcluir,
 }: {
   culto: { evento_id: string; nome: string; adultos: number | null; homens: number | null; observacao: string | null; lancado: boolean };
   itens: Item[];
+  valoresItens: Record<string, ValorItem>;
   podeEditar: boolean;
   podeExcluir: boolean;
 }) {
-  const supabase = await createClient();
-
-  const { data: linhas } = await supabase
-    .from("contagens_itens")
-    .select("servindo, publico, itens_contagem!inner(codigo), contagens!inner(evento_id)")
-    .eq("contagens.evento_id", culto.evento_id);
-
-  const porCodigo: Record<string, ValorItem> = {};
-  for (const linha of linhas ?? []) {
-    porCodigo[linha.itens_contagem.codigo] = {
-      servindo: linha.servindo,
-      publico: linha.publico,
-    };
-  }
+  const porCodigo = valoresItens;
 
   const iniciais: ValoresIniciais = {
     adultos: culto.adultos,

@@ -105,7 +105,9 @@ function CartaoDia({ titulo, cultos }: { titulo: string; cultos: Comparativo[] }
       </div>
 
       {cultos.length === 0 ? (
-        <p className="flex h-40 items-center justify-center text-center text-sm text-texto-3">
+        /* Sem dado não há layout para reservar: a altura do gráfico aqui
+           deixava dois blocos vazios ocupando meia tela de celular. */
+        <p className="py-6 text-center text-sm text-texto-3">
           Nenhuma contagem ainda.
         </p>
       ) : (

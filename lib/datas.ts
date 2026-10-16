@@ -57,6 +57,20 @@ export function formatarDataLonga(iso: string): string {
   }).format(dataLocal(iso));
 }
 
+/**
+ * "2026-09-13" -> "dom, 13/09/2026"
+ *
+ * Para listas em tela de celular: guarda o dia da semana, que é a informação
+ * que distingue um domingo de uma quinta, sem o comprimento de
+ * `formatarDataLonga`, que não cabe em 360px e era cortado com reticências.
+ */
+export function formatarDataMedia(iso: string): string {
+  const curto = new Intl.DateTimeFormat("pt-BR", { weekday: "short" })
+    .format(dataLocal(iso))
+    .replace(".", "");
+  return `${curto}, ${formatarDataCurta(iso)}`;
+}
+
 /** "2026-09-13" -> "13/09/2026" */
 export function formatarDataCurta(iso: string): string {
   const [ano, mes, dia] = iso.split("-");

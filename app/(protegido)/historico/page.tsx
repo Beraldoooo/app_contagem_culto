@@ -7,7 +7,12 @@ import { AvisoSupabase } from "@/components/aviso-supabase";
 import { CabecalhoPagina, Pagina, Selo, Vazio } from "@/components/ui/base";
 import { LinkBotao } from "@/components/ui/botao";
 import { obterSessaoAtual } from "@/lib/auth/perfil";
-import { ehDataValida, formatarDataLonga } from "@/lib/datas";
+import {
+  comInicialMaiuscula,
+  ehDataValida,
+  formatarDataLonga,
+  formatarDataMedia,
+} from "@/lib/datas";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -201,8 +206,16 @@ function ItemData({
         className="flex items-center justify-between gap-3 rounded-cartao border border-borda bg-superficie p-5 shadow-cartao transition hover:border-marca/40 hover:bg-superficie-suave"
       >
         <div className="flex min-w-0 flex-col gap-1">
-          <span className="truncate text-[15px] font-semibold first-letter:uppercase">
-            {formatarDataLonga(linha.data)}
+          {/* A data por extenso não cabe em celular estreito e saía cortada
+              com reticências. A versão curta guarda o dia da semana, que é o
+              que distingue um domingo de uma quinta. */}
+          <span className="truncate text-[15px] font-semibold">
+            <span className="sm:hidden">
+              {comInicialMaiuscula(formatarDataMedia(linha.data))}
+            </span>
+            <span className="hidden sm:inline">
+              {comInicialMaiuscula(formatarDataLonga(linha.data))}
+            </span>
           </span>
 
           <div className="flex flex-wrap items-center gap-1.5">
