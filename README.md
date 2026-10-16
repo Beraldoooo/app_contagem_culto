@@ -32,6 +32,9 @@ São quatro passos. Do primeiro ao app rodando dá uns 15 minutos.
 
 No painel do Supabase, **SQL Editor → New query**, cole o conteúdo de
 [`supabase/schema.sql`](./supabase/schema.sql) inteiro e clique em **Run**.
+Depois repita com
+[`supabase/contagem-por-categoria.sql`](./supabase/contagem-por-categoria.sql),
+que traz a contagem por categoria e por ministério.
 
 Isso cria as tabelas, os tipos, os gatilhos, as políticas de segurança (RLS), a
 view de totais e os horários fixos padrão. O script é idempotente: rodar de
@@ -180,9 +183,11 @@ public/
   icons/              ícones do manifest (192, 512 e maskable)
 supabase/
   schema.sql          tabelas, enums, triggers, RLS e seed — rodar no SQL Editor
+  contagem-por-categoria.sql  contagem por categoria e ministério — rodar depois do schema
   totais-por-data.sql view que soma por data (já incluída no schema.sql)
   nome-exibicao.sql   nome de exibição dos usuários (já incluído no schema.sql)
-  auditoria/          scripts que conferem as permissões contra a API real
+  auditoria/          visualizador.mjs confere permissões contra a API real;
+                      contagem.mjs testa o schema num Postgres local (PGlite)
 proxy.ts              roda antes de cada request (era `middleware.ts` no Next 15)
 ```
 
