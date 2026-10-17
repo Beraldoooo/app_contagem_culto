@@ -10,6 +10,8 @@ import {
   YAxis,
 } from "recharts";
 
+import { formatarVariacao } from "@/lib/crescimento";
+
 export type PontoLinha = {
   rotulo: string;
   /** Período inteiro, para a dica ("semana de 05/10 a 11/10"). */
@@ -31,11 +33,6 @@ const NEUTRO = "var(--texto-3)";
 
 const corDe = (v: number | null) => (v === null ? NEUTRO : v > 0 ? SUBIU : v < 0 ? CAIU : NEUTRO);
 
-export function formatarVariacao(v: number | null) {
-  if (v === null) return null;
-  const sinal = v > 0 ? "↑ " : v < 0 ? "↓ " : "";
-  return `${sinal}${Math.abs(v).toLocaleString("pt-BR")}%`;
-}
 
 function Ponto(props: { cx?: number; cy?: number; payload?: PontoLinha }) {
   const { cx, cy, payload } = props;

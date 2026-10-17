@@ -15,6 +15,7 @@ import { obterSessaoAtual } from "@/lib/auth/perfil";
 import type { Resumo } from "@/lib/contagem";
 import {
   eventosPorTipo,
+  formatarVariacao,
   mesDe,
   mesesEntre,
   segundaDaSemana,
@@ -28,7 +29,7 @@ import { diaDaSemana, ehDataValida, formatarDataCurta, hojeISO } from "@/lib/dat
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
-import { formatarVariacao, GraficoLinha, type PontoLinha } from "./grafico-linha";
+import { GraficoLinha, type PontoLinha } from "./grafico-linha";
 import { CartaoMensagem, MensagemDoGrupo, type CultoDaMensagem } from "./mensagem-do-grupo";
 
 export const metadata: Metadata = { title: "Acompanhamento" };
@@ -328,13 +329,17 @@ function CrescimentoCultos({
   }
 
   if (periodo === "mes") {
-    const semanas = semanasEntre(de, ate, fixos, hoje);
+    // A semana pertence ao mês em que TERMINA (no domingo). Sem isso, a semana
+    // de 28/09 a 04/10 entrava em setembro só com a quarta 30/09 e aparecia
+    // como uma queda enorme — era uma semana de outubro.
+    const semanas = semanasEntre(de, ate, fixos, hoje).filter((s) => mesDe(s.fim) === mes);
     const [resumoMes] = mesesEntre(de, ate, fixos, hoje);
     const emAndamento = semanas.find((s) => s.emAndamento);
     const pontos: PontoLinha[] = semanas
       .filter((s) => !s.emAndamento)
       .map((s) => ({
-        rotulo: ddmm(s.inicio),
+        // Rotulada pelo domingo, que é o que define o mês da semana.
+        rotulo: ddmm(s.fim),
         descricao: `Semana de ${ddmm(s.inicio)} a ${ddmm(s.fim)}`,
         valor: s.total,
         variacao: s.variacao,
@@ -351,10 +356,14 @@ function CrescimentoCultos({
             <div className="text-right">
               <p className="text-xs text-texto-3">Semana típica do mês</p>
               <p className="text-xl font-bold tabular-nums">
-                {resumoMes.semanaTipica.toLocaleString("pt-BR")}{" "}
-                <Variacao valor={resumoMes.variacao} />
+                {resumoMes.semanaTipica.toLocaleString("pt-BR")}
+                {resumoMes.variacao !== null ? (
+                  <> <Variacao valor={resumoMes.variacao} /></>
+                ) : null}
               </p>
-              <p className="text-xs text-texto-3">sobre o mês anterior</p>
+              <p className="text-xs text-texto-3">
+                {resumoMes.variacao !== null ? "sobre o mês anterior" : "sem mês anterior para comparar"}
+              </p>
             </div>
           ) : null}
         </div>

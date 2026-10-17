@@ -78,6 +78,17 @@ function chaveCulto(c: CultoFixo) {
   return `${diaDaSemana(c.data)}|${c.horario.slice(0, 5)}`;
 }
 
+/**
+ * "↑ 4,4%" · "↓ 2%" · "0%". Fica aqui, e não no componente do gráfico, porque
+ * a página (servidor) e o gráfico (navegador) usam a mesma: função exportada de
+ * um arquivo "use client" não pode ser chamada no servidor.
+ */
+export function formatarVariacao(v: number | null) {
+  if (v === null) return null;
+  const sinal = v > 0 ? "↑ " : v < 0 ? "↓ " : "";
+  return `${sinal}${Math.abs(v).toLocaleString("pt-BR")}%`;
+}
+
 /** Variação em %, com uma casa. `null` quando não há base para comparar. */
 export function variacao(atual: number, anterior: number): number | null {
   if (anterior <= 0) return null;
