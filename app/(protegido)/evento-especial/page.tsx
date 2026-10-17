@@ -6,6 +6,7 @@ import { CabecalhoPagina, Cartao, Pagina } from "@/components/ui/base";
 import { obterSessaoAtual, podeLancar } from "@/lib/auth/perfil";
 import { ehDataValida, hojeISO } from "@/lib/datas";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
+import { createClient } from "@/lib/supabase/server";
 
 import { FormularioEvento } from "./formulario-evento";
 
@@ -26,15 +27,22 @@ export default async function EventoEspecialPage({
       ? dataParam
       : hojeISO();
 
+  const supabase = await createClient();
+  const { data: tipos } = await supabase
+    .from("tipos_evento")
+    .select("id, nome")
+    .eq("ativo", true)
+    .order("nome");
+
   return (
     <Pagina largura="estreita">
       <CabecalhoPagina
         titulo="Novo evento especial"
-        descricao="Para datas fora da rotina — Culto de Homens numa terça, evento anual de sábado. Entra no histórico como qualquer culto, mas fica de fora do comparativo de frequência regular."
+        descricao="Para datas fora da rotina, como o Culto Arena e o Culto Belas. Entra no histórico como qualquer culto, mas é comparado só com eventos do mesmo tipo, mês com mês."
       />
 
       <Cartao className="sm:p-6">
-        <FormularioEvento dataInicial={dataInicial} />
+        <FormularioEvento dataInicial={dataInicial} tipos={tipos ?? []} />
       </Cartao>
     </Pagina>
   );

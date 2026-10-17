@@ -31,6 +31,8 @@ import {
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 import { createClient } from "@/lib/supabase/server";
 
+import { AbrirHorarios } from "./abrir-horarios";
+import { AvisoSemCulto, BotaoSemCulto } from "./botao-sem-culto";
 import { FormularioContagem, type ValoresIniciais } from "./formulario-contagem";
 import { FormularioData } from "./formulario-data";
 import { MensagensDoDia } from "./mensagens-do-dia";
@@ -113,7 +115,7 @@ async function Dia({
       supabase
         .from("resumo_por_evento")
         .select(
-          "evento_id, nome, horario, tipo, adultos, homens, observacao, criancas, pads, volts, servindo_fora, servindo_dentro, pastoral, lancado, total_simples, total_detalhado",
+          "evento_id, nome, horario, tipo, adultos, homens, observacao, criancas, pads, volts, servindo_fora, servindo_dentro, pastoral, lancado, situacao, sem_culto, total_simples, total_detalhado",
         )
         .eq("data", data)
         .order("horario", { ascending: true }),
@@ -142,7 +144,23 @@ async function Dia({
   }
 
   const lista = cultos ?? [];
-  if (lista.length === 0) return <SemCultos data={data} podeEditar={podeEditar} />;
+  if (lista.length === 0) {
+    // Sem linha em "eventos" não quer dizer que não há culto nesse dia: os
+    // horários fixos só são criados quando alguém que lança abre a data.
+    const { data: fixos } = await supabase
+      .from("horarios_padrao")
+      .select("horario")
+      .eq("dia_semana", diaDaSemana(data))
+      .eq("ativo", true)
+      .order("horario");
+    return (
+      <SemCultos
+        data={data}
+        podeEditar={podeEditar}
+        horariosFixos={(fixos ?? []).map((f) => rotuloHorario(f.horario))}
+      />
+    );
+  }
 
   const itens: Item[] = itensBrutos ?? [];
 
@@ -169,8 +187,11 @@ async function Dia({
   const simples = mensagemSimples(data, diaSemana, resumos);
   const detalhada = mensagemDetalhada(data, diaSemana, resumos);
 
-  const lancados = lista.filter((c) => c.lancado).length;
-  const pendentes = lista.length - lancados;
+  // Horário que não teve culto não fica devendo lançamento.
+  const lancados = lista.filter((c) => c.situacao === "lancado").length;
+  const pendentes = lista.filter((c) => c.situacao === "pendente").length;
+  const semCulto = lista.filter((c) => c.situacao === "sem_culto").length;
+  const aconteceram = lista.length - semCulto;
   const totalSimples = lista.reduce(
     (t, c) => (c.lancado ? t + c.total_simples : t),
     0,
@@ -216,8 +237,9 @@ async function Dia({
         </div>
 
         <p className="mt-3 text-xs text-texto-3">
-          {lancados} de {lista.length}{" "}
-          {lista.length === 1 ? "horário lançado" : "horários lançados"}
+          {lancados} de {aconteceram}{" "}
+          {aconteceram === 1 ? "horário lançado" : "horários lançados"}
+          {semCulto > 0 ? ` · ${semCulto} sem culto` : ""}
           {pendentes > 0
             ? ` · ${pendentes} ${pendentes === 1 ? "pendente" : "pendentes"}`
             : " · dia completo"}
@@ -251,9 +273,13 @@ async function Dia({
                     {rotuloHorario(culto.horario)}
                   </span>
                 </span>
-                {culto.lancado ? (
+                {culto.situacao === "lancado" ? (
                   <span className="shrink-0 rounded-campo bg-sucesso-suave px-2.5 py-1 text-xs font-medium tabular-nums text-sucesso-texto">
                     ✓ {culto.total_simples}
+                  </span>
+                ) : culto.situacao === "sem_culto" ? (
+                  <span className="shrink-0 rounded-campo bg-superficie-suave px-2.5 py-1 text-xs font-medium text-texto-3">
+                    sem culto
                   </span>
                 ) : (
                   <span className="shrink-0 rounded-campo bg-aviso-suave px-2.5 py-1 text-xs font-medium text-aviso-texto">
@@ -305,7 +331,7 @@ function FormularioDoCulto({
   podeEditar,
   podeExcluir,
 }: {
-  culto: { evento_id: string; nome: string; adultos: number | null; homens: number | null; observacao: string | null; lancado: boolean };
+  culto: { evento_id: string; nome: string; adultos: number | null; homens: number | null; observacao: string | null; lancado: boolean; sem_culto: boolean };
   itens: Item[];
   valoresItens: Record<string, ValorItem>;
   podeEditar: boolean;
@@ -320,12 +346,25 @@ function FormularioDoCulto({
     itens: porCodigo,
   };
 
+  if (culto.sem_culto) {
+    return (
+      <AvisoSemCulto
+        eventoId={culto.evento_id}
+        nomeCulto={culto.nome}
+        podeEditar={podeEditar}
+      />
+    );
+  }
+
   if (!podeEditar) {
     return <SomenteLeitura culto={culto} itens={itens} iniciais={iniciais} />;
   }
 
   return (
-    <FormularioContagem
+    <div className="flex flex-col gap-4">
+      {/* Só para horário ainda pendente: com contagem lançada, o banco recusa. */}
+      {!culto.lancado ? <BotaoSemCulto eventoId={culto.evento_id} /> : null}
+      <FormularioContagem
       key={culto.evento_id}
       eventoId={culto.evento_id}
       nomeCulto={culto.nome}
@@ -334,6 +373,7 @@ function FormularioDoCulto({
       jaLancado={culto.lancado}
       podeExcluir={podeExcluir}
     />
+    </div>
   );
 }
 
@@ -413,11 +453,36 @@ function Linha({
 function SemCultos({
   data,
   podeEditar,
+  horariosFixos,
 }: {
   data: string;
   podeEditar: boolean;
+  horariosFixos: string[];
 }) {
   const diaSemana = DIAS_SEMANA[diaDaSemana(data)];
+  const futura = data > hojeISO();
+
+  // Dia de culto fixo cujos horários ainda não foram abertos. Dizer "não há
+  // culto" aqui seria falso — era o que a tela dizia antes.
+  if (horariosFixos.length > 0) {
+    const lista = horariosFixos.join(", ");
+    return (
+      <section className="flex flex-col gap-4">
+        <h2 className="text-base font-semibold first-letter:uppercase">
+          {formatarDataLonga(data)}
+        </h2>
+        <Cartao className="text-sm">
+          <p>Nenhuma contagem lançada nesta data ainda.</p>
+          <p className="mt-2 text-texto-2">
+            {diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1)} tem culto às {lista}.
+          </p>
+          {podeEditar && !futura ? (
+            <AbrirHorarios data={data} rotulo={`Abrir os horários (${lista})`} />
+          ) : null}
+        </Cartao>
+      </section>
+    );
+  }
 
   return (
     <section className="flex flex-col gap-4">

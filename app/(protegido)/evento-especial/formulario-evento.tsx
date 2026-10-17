@@ -10,6 +10,7 @@ import { classesCampo, classesRotulo } from "@/components/ui/base";
 import { classesBotao } from "@/components/ui/botao";
 
 import { criarEventoEspecial, type EstadoEvento } from "./acoes";
+import { NOVO_TIPO } from "./constantes";
 
 function Botao() {
   const { pending } = useFormStatus();
@@ -27,7 +28,15 @@ function Botao() {
 
 type Linha = { id: number; valor: string };
 
-export function FormularioEvento({ dataInicial }: { dataInicial: string }) {
+export type TipoEvento = { id: string; nome: string };
+
+export function FormularioEvento({
+  dataInicial,
+  tipos,
+}: {
+  dataInicial: string;
+  tipos: TipoEvento[];
+}) {
   const [estado, enviar] = useActionState<EstadoEvento, FormData>(
     criarEventoEspecial,
     {},
@@ -38,6 +47,9 @@ export function FormularioEvento({ dataInicial }: { dataInicial: string }) {
   const [horarios, setHorarios] = useState<Linha[]>([{ id: 0, valor: "" }]);
   const proximoId = useRef(1);
   const idBase = useId();
+  // Sem tipo cadastrado nenhum, já começa no "novo" — senão a pessoa veria uma
+  // lista vazia sem entender o que fazer.
+  const [tipo, setTipo] = useState(tipos.length ? "" : NOVO_TIPO);
 
   function alterar(id: number, valor: string) {
     setHorarios((atual) =>
@@ -47,15 +59,46 @@ export function FormularioEvento({ dataInicial }: { dataInicial: string }) {
 
   return (
     <form action={enviar} className="flex flex-col gap-5">
-      <Campo
-        rotulo="Nome do evento"
-        name="nome"
-        type="text"
-        required
-        maxLength={120}
-        placeholder="Culto de Homens"
-        autoComplete="off"
-      />
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={`${idBase}-tipo`} className={classesRotulo}>
+          Tipo de evento
+        </label>
+        <select
+          id={`${idBase}-tipo`}
+          name="tipo_evento"
+          required
+          value={tipo}
+          onChange={(e) => setTipo(e.target.value)}
+          className={classesCampo}
+        >
+          <option value="" disabled>
+            Escolha…
+          </option>
+          {tipos.map((t) => (
+            <option key={t.id} value={t.id}>
+              {t.nome}
+            </option>
+          ))}
+          <option value={NOVO_TIPO}>+ Cadastrar novo tipo</option>
+        </select>
+        <p className="text-xs text-texto-3">
+          O tipo agrupa os eventos para comparar mês com mês — a Arena de outubro
+          com a de setembro.
+        </p>
+      </div>
+
+      {tipo === NOVO_TIPO ? (
+        <Campo
+          rotulo="Nome do tipo novo"
+          name="tipo_novo"
+          type="text"
+          required
+          maxLength={60}
+          placeholder="Encontro de Casais"
+          autoComplete="off"
+          dica="Fica salvo na lista para os próximos eventos."
+        />
+      ) : null}
 
       <Campo rotulo="Data" name="data" type="date" required defaultValue={dataInicial} />
 

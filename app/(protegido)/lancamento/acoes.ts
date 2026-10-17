@@ -178,7 +178,11 @@ export async function salvarContagem(
     .single();
 
   if (erroCabecalho || !contagem) {
-    return { erro: "Não foi possível salvar. Tente novamente." };
+    return {
+      erro: erroCabecalho?.message.includes("não teve culto")
+        ? 'Este horário está marcado como "não teve culto". Desfaça a marcação antes de lançar.'
+        : "Não foi possível salvar. Tente novamente.",
+    };
   }
 
   const preenchidos = itens.filter((item) => {
@@ -261,4 +265,42 @@ export async function excluirContagem(
 
   revalidatePath("/lancamento");
   return { ok: "Lançamento excluído." };
+}
+
+/**
+ * Marca (ou desmarca) "não teve culto" num horário — Natal, chuva que
+ * cancelou o culto. O horário sai da comparação de crescimento sem virar
+ * pendência e sem virar zero.
+ *
+ * O banco recusa marcar um horário que já tem contagem (gatilho
+ * sem_culto_exige_vazio): ou o culto aconteceu e tem número, ou não aconteceu.
+ */
+export async function marcarSemCulto(
+  _anterior: EstadoContagem,
+  formData: FormData,
+): Promise<EstadoContagem> {
+  const eventoId = String(formData.get("evento_id") ?? "");
+  const semCulto = formData.get("sem_culto") === "1";
+  if (!eventoId) return { erro: "Horário não informado." };
+
+  const sessao = await exigirContador();
+  if ("erro" in sessao) return { erro: sessao.erro };
+
+  const { data, error } = await sessao.supabase
+    .from("eventos")
+    .update({ sem_culto: semCulto })
+    .eq("id", eventoId)
+    .select("id");
+
+  if (error) {
+    return {
+      erro: error.message.includes("já tem contagem")
+        ? "Este horário já tem contagem lançada. Peça ao administrador para excluir antes."
+        : "Não foi possível salvar. Tente novamente.",
+    };
+  }
+  if (!data?.length) return { erro: "Horário não encontrado." };
+
+  revalidatePath("/lancamento");
+  return { ok: semCulto ? "Marcado: não teve culto." : "Desmarcado." };
 }
