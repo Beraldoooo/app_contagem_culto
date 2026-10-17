@@ -6,7 +6,7 @@ import { obterSessaoAtual, podeLancar, ROTULO_ROLE } from "@/lib/auth/perfil";
 import { hasSupabaseEnv } from "@/lib/supabase/env";
 
 import { ResumoDoDia } from "./resumo-do-dia";
-import { GraficoComparativo } from "./grafico-comparativo";
+import { TendenciaSemanal } from "./tendencia-semanal";
 
 export default async function Home() {
   if (!hasSupabaseEnv()) return <AvisoSupabase />;
@@ -32,7 +32,7 @@ export default async function Home() {
 
       <div className="flex flex-col gap-6">
         <ResumoDoDia />
-        <GraficoComparativo />
+        <TendenciaSemanal />
       </div>
     </Pagina>
   );

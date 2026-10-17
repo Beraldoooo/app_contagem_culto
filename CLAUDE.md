@@ -94,7 +94,10 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
       escolha de cultos e tipo, crescimento semanal/mensal/anual e eventos por tipo. Contas em
       `lib/crescimento.ts`, testadas em `scripts/teste-crescimento.ts` (21). /relatorios redireciona.
       Com o banco vazio, os gráficos com dados ainda não foram vistos na tela.
-- [ ] Frase de tendência no Início, no lugar dos gráficos de Domingos/Quintas
+- [x] Frase de tendência no Início (17/10/2026), no lugar dos gráficos de Domingos/Quintas
+      (`app/(protegido)/tendencia-semanal.tsx`). Usa a última semana **fechada e completa** (todos os cultos
+      lançados ou "sem culto"); semana fechada só com parte dos cultos fica fora e aparece num aviso — senão
+      a frase sairia de um culto só. Toque leva ao Acompanhamento no mês daquela semana.
 - [ ] Exportação em planilha no Acompanhamento
 - [ ] Remover `contagens.quantidade`, que ficou obsoleta mas foi mantida para o deploy não quebrar
 - [ ] **Importar as planilhas de 2024 e 2025** (ver 0.1). Só depois do modelo certo, e nunca direto em produção.
