@@ -18,7 +18,10 @@ const nextConfig: NextConfig = {
     return [
       // "Tendência" virou "Relatórios". Mantém funcionando os atalhos e links
       // antigos; os filtros na URL (?serie=…) vão junto.
-      { source: "/tendencia", destination: "/relatorios", permanent: true },
+      // A tela de Relatórios virou Acompanhamento (17/10/2026); links e
+      // favoritos antigos continuam funcionando.
+      { source: "/tendencia", destination: "/acompanhamento", permanent: true },
+      { source: "/relatorios", destination: "/acompanhamento", permanent: true },
     ];
   },
 };

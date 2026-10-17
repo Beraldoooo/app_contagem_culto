@@ -67,9 +67,9 @@ export const ITENS_MENU: ItemMenu[] = [
     visivel: (p) => p.lanca,
   },
   {
-    href: "/relatorios",
-    rotulo: "Relatórios",
-    rotuloCurto: "Relatórios",
+    href: "/acompanhamento",
+    rotulo: "Acompanhamento",
+    rotuloCurto: "Acompanhar",
     icone: IconeRelatorios,
     grupo: "principal",
     visivel: () => true,

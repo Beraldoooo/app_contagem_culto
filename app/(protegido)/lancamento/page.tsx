@@ -13,14 +13,7 @@ import {
 } from "@/components/ui/base";
 import { LinkBotao } from "@/components/ui/botao";
 import { ehAdmin, obterSessaoAtual, podeLancar } from "@/lib/auth/perfil";
-import {
-  mensagemDetalhada,
-  mensagemSimples,
-  type CultoResumido,
-  type Item,
-  type Resumo,
-  type ValorItem,
-} from "@/lib/contagem";
+import { type Item, type ValorItem } from "@/lib/contagem";
 import {
   DIAS_SEMANA,
   diaDaSemana,
@@ -35,7 +28,6 @@ import { AbrirHorarios } from "./abrir-horarios";
 import { AvisoSemCulto, BotaoSemCulto } from "./botao-sem-culto";
 import { FormularioContagem, type ValoresIniciais } from "./formulario-contagem";
 import { FormularioData } from "./formulario-data";
-import { MensagensDoDia } from "./mensagens-do-dia";
 
 export const metadata: Metadata = { title: "Contagem do dia" };
 
@@ -164,28 +156,7 @@ async function Dia({
 
   const itens: Item[] = itensBrutos ?? [];
 
-  // O mesmo formato que lib/contagem usa, para as mensagens saírem das regras
-  // já testadas em vez de uma segunda conta feita aqui.
-  const resumos: CultoResumido[] = lista.map((c) => ({
-    rotulo: rotuloHorario(c.horario),
-    resumo: {
-      adultos: c.adultos,
-      homens: c.homens,
-      criancas: c.criancas,
-      pads: c.pads,
-      volts: c.volts,
-      servindoFora: c.servindo_fora,
-      servindoDentro: c.servindo_dentro,
-      pastoral: c.pastoral,
-      totalSimples: c.total_simples,
-      totalDetalhado: c.total_detalhado,
-      lancado: c.lancado,
-    } satisfies Resumo,
-  }));
 
-  const diaSemana = diaDaSemana(data);
-  const simples = mensagemSimples(data, diaSemana, resumos);
-  const detalhada = mensagemDetalhada(data, diaSemana, resumos);
 
   // Horário que não teve culto não fica devendo lançamento.
   const lancados = lista.filter((c) => c.situacao === "lancado").length;
@@ -314,7 +285,13 @@ async function Dia({
         </p>
       )}
 
-      <MensagensDoDia simples={simples} detalhada={detalhada} />
+      {/* A mensagem do grupo é montada no Acompanhamento, onde dá para
+          escolher os cultos e o tipo. Aqui fica só o atalho, já com a data. */}
+      {lancados > 0 ? (
+        <LinkBotao href={`/acompanhamento?data=${data}`}>
+          Gerar mensagem para o grupo
+        </LinkBotao>
+      ) : null}
 
       {podeEditar ? (
         <LinkBotao href={`/evento-especial?data=${data}`} variante="secundario">

@@ -15,7 +15,7 @@ import {
 } from "./itens";
 
 /** Itens fixos da barra; o resto vai para o painel "Mais". */
-const NA_BARRA = ["/", "/historico", "/relatorios"];
+const NA_BARRA = ["/", "/historico", "/acompanhamento"];
 const CENTRAL = "/lancamento";
 
 const classeAba =
@@ -59,7 +59,7 @@ export function BarraInferior({
   );
   const maisAtivo = extras.some((i) => estaAtivo(pathname, i.href));
 
-  const [inicio, historico, relatorios] = NA_BARRA.map(itemPorHref);
+  const [inicio, historico, acompanhamento] = NA_BARRA.map(itemPorHref);
   const central = permissoes.lanca ? itemPorHref(CENTRAL) : null;
 
   useEffect(() => {
@@ -150,7 +150,7 @@ export function BarraInferior({
             </div>
           ) : null}
 
-          <Aba item={relatorios} ativo={estaAtivo(pathname, relatorios.href)} />
+          <Aba item={acompanhamento} ativo={estaAtivo(pathname, acompanhamento.href)} />
 
           <button
             type="button"

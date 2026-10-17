@@ -90,7 +90,12 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
 - [x] **Salvamento conferido de ponta a ponta** (16/10/2026), com a conta de teste promovida a contador por um
       tempo e depois devolvida a visualizador. Em seguida o banco foi zerado (`supabase/zerar-lancamentos.sql`):
       0 eventos e 0 contagens, com usuários, os 16 ministérios e os 5 horários fixos mantidos.
-- [ ] **Acompanhamento** no lugar de Relatórios — plano completo na seção 0.2
+- [x] **Acompanhamento** no lugar de Relatórios (17/10/2026), plano na seção 0.2: mensagem do grupo com
+      escolha de cultos e tipo, crescimento semanal/mensal/anual e eventos por tipo. Contas em
+      `lib/crescimento.ts`, testadas em `scripts/teste-crescimento.ts` (21). /relatorios redireciona.
+      Com o banco vazio, os gráficos com dados ainda não foram vistos na tela.
+- [ ] Frase de tendência no Início, no lugar dos gráficos de Domingos/Quintas
+- [ ] Exportação em planilha no Acompanhamento
 - [ ] Remover `contagens.quantidade`, que ficou obsoleta mas foi mantida para o deploy não quebrar
 - [ ] **Importar as planilhas de 2024 e 2025** (ver 0.1). Só depois do modelo certo, e nunca direto em produção.
 - [ ] **Fase 2**: envio automático do resumo do dia para o grupo de WhatsApp — por último, mas é a prioridade
