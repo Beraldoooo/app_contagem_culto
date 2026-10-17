@@ -99,6 +99,12 @@ export const IconeSetaBaixo: Icone = (p) => (
   </Base>
 );
 
+export const IconeConfirmado: Icone = (p) => (
+  <Base {...p}>
+    <path d="m5 12 5 5 9-10" />
+  </Base>
+);
+
 export const IconeFechar: Icone = (p) => (
   <Base {...p}>
     <path d="M18 6 6 18" />

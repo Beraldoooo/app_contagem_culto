@@ -5,8 +5,7 @@ export type TipoFiltro = "todos" | "culto_fixo" | "evento_especial";
 
 /**
  * Formulário GET puro: os filtros viram parâmetros na URL, então dá para voltar
- * pelo botão do navegador, recarregar e mandar o link para alguém. Sem
- * JavaScript de cliente.
+ * pelo botão do navegador, recarregar e mandar o link para alguém.
  */
 export function Filtros({
   de,
@@ -33,11 +32,12 @@ export function Filtros({
         name="tipo"
         defaultValue={tipo}
         className="sm:col-span-2 lg:w-64"
-      >
-        <option value="todos">Todos</option>
-        <option value="culto_fixo">Somente cultos fixos</option>
-        <option value="evento_especial">Somente eventos especiais</option>
-      </FiltroSelect>
+        opcoes={[
+          { valor: "todos", rotulo: "Todos" },
+          { valor: "culto_fixo", rotulo: "Somente cultos fixos" },
+          { valor: "evento_especial", rotulo: "Somente eventos especiais" },
+        ]}
+      />
 
       <div className="flex gap-2 sm:col-span-2">
         <button type="submit" className={`${classesBotao()} flex-1 lg:flex-none`}>

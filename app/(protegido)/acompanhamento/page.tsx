@@ -47,6 +47,15 @@ type Periodo = keyof typeof PERIODOS;
 const ESCOPOS = { geral: "Todos os cultos", "0": "Domingo", "3": "Quarta", "4": "Quinta" } as const;
 type Escopo = keyof typeof ESCOPOS;
 
+/** Qual total soma: só a congregação, ou com quem serviu (seção 0.1). */
+const TOTAIS = { simples: "Simples", detalhado: "Detalhada" } as const;
+type Total = keyof typeof TOTAIS;
+
+const NOMES_MES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho",
+  "agosto", "setembro", "outubro", "novembro", "dezembro"];
+/** "2026-09" → "setembro de 2026" */
+const mesPorExtenso = (mes: string) => `${NOMES_MES[Number(mes.slice(5)) - 1]} de ${mes.slice(0, 4)}`;
+
 const MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"];
 const rotuloMes = (mes: string) =>
   `${MESES[Number(mes.slice(5)) - 1]}/${mes.slice(2, 4)}`;
@@ -80,6 +89,8 @@ export default async function AcompanhamentoPage({
   const periodo: Periodo = periodoParam && periodoParam in PERIODOS ? (periodoParam as Periodo) : "mes";
   const escopoParam = um(q.escopo);
   const escopo: Escopo = escopoParam && escopoParam in ESCOPOS ? (escopoParam as Escopo) : "geral";
+  const totalParam = um(q.total);
+  const total: Total = totalParam && totalParam in TOTAIS ? (totalParam as Total) : "simples";
   const mesParam = um(q.mes);
   const mesEscolhido = mesParam && /^\d{4}-\d{2}$/.test(mesParam) && mesParam <= mesDe(hoje) ? mesParam : mesDe(hoje);
 
@@ -118,7 +129,7 @@ export default async function AcompanhamentoPage({
   // anterior para comparar.
   const buscarDe = somarDias(de, -45);
 
-  const [linhasDia, linhasPeriodo] = await Promise.all([
+  const [linhasDia, linhasPeriodo, primeira] = await Promise.all([
     supabase
       .from("resumo_por_evento")
       .select(
@@ -128,7 +139,14 @@ export default async function AcompanhamentoPage({
       .eq("lancado", true)
       .order("horario"),
     buscarTudo(supabase, buscarDe, ate),
+    // O mês mais antigo com culto: a lista de meses começa nele.
+    supabase.from("eventos").select("data").order("data").limit(1).maybeSingle(),
   ]);
+
+  const mesesDisponiveis: string[] = [];
+  const primeiroMes = primeira.data ? mesDe(primeira.data.data) : mesDe(hoje);
+  for (let m = mesDe(hoje); m >= primeiroMes; m = mesAnterior(m)) mesesDisponiveis.push(m);
+  if (!mesesDisponiveis.includes(mesEscolhido)) mesesDisponiveis.push(mesEscolhido);
 
   const cultosDaMensagem: CultoDaMensagem[] = (linhasDia.data ?? []).map((c) => ({
     id: c.evento_id,
@@ -152,12 +170,12 @@ export default async function AcompanhamentoPage({
   const fixos: CultoFixo[] = linhasPeriodo
     .filter((l) => l.tipo === "culto_fixo")
     .filter((l) => escopo === "geral" || diaDaSemana(l.data) === Number(escopo))
-    .map((l) => ({ data: l.data, horario: l.horario, situacao: l.situacao, total: l.total_simples }));
+    .map((l) => ({ data: l.data, horario: l.horario, situacao: l.situacao, total: valorDe(l, total) }));
   const eventos: EventoLancado[] = linhasPeriodo
     .filter((l) => l.tipo === "evento_especial")
-    .map((l) => ({ data: l.data, tipoEvento: l.tipo_evento, situacao: l.situacao, total: l.total_simples }));
+    .map((l) => ({ data: l.data, tipoEvento: l.tipo_evento, situacao: l.situacao, total: valorDe(l, total) }));
 
-  const filtrosAtuais = { periodo, escopo, ...(periodo === "mes" ? { mes: mesEscolhido } : {}) };
+  const filtrosAtuais = { periodo, escopo, total, ...(periodo === "mes" ? { mes: mesEscolhido } : {}) };
 
   return (
     <Pagina>
@@ -181,22 +199,15 @@ export default async function AcompanhamentoPage({
         <div className="flex flex-col gap-5">
           <form action="/acompanhamento" className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <input type="hidden" name="data" value={dataMensagem} />
-            <FiltroSelect id="periodo" name="periodo" rotulo="Período" defaultValue={periodo} className="sm:w-48">
-              {Object.entries(PERIODOS).map(([v, r]) => (
-                <option key={v} value={v}>{r}</option>
-              ))}
-            </FiltroSelect>
-            <FiltroSelect id="escopo" name="escopo" rotulo="Cultos" defaultValue={escopo} className="sm:w-56">
-              {Object.entries(ESCOPOS).map(([v, r]) => (
-                <option key={v} value={v}>{r}</option>
-              ))}
-            </FiltroSelect>
+            <FiltroSelect id="periodo" name="periodo" rotulo="Período" defaultValue={periodo} className="sm:w-48"
+              opcoes={Object.entries(PERIODOS).map(([valor, rotulo]) => ({ valor, rotulo }))} />
+            <FiltroSelect id="escopo" name="escopo" rotulo="Cultos" defaultValue={escopo} className="sm:w-56"
+              opcoes={Object.entries(ESCOPOS).map(([valor, rotulo]) => ({ valor, rotulo }))} />
+            <FiltroSelect id="total" name="total" rotulo="Contagem" defaultValue={total} className="sm:w-52"
+              opcoes={Object.entries(TOTAIS).map(([valor, rotulo]) => ({ valor, rotulo }))} />
             {periodo === "mes" ? (
-              <label htmlFor="mes" className="flex h-11 items-center gap-1.5 rounded-campo border border-borda bg-superficie px-3.5 text-sm sm:w-60">
-                <span className="shrink-0 text-texto-2">Mês:</span>
-                <input id="mes" name="mes" type="month" defaultValue={mesEscolhido} max={mesDe(hoje)}
-                  className="min-w-0 flex-1 bg-transparent font-semibold text-texto outline-none" />
-              </label>
+              <FiltroSelect id="mes" name="mes" rotulo="Mês" defaultValue={mesEscolhido} className="sm:w-64"
+                opcoes={mesesDisponiveis.map((m) => ({ valor: m, rotulo: mesPorExtenso(m) }))} />
             ) : null}
             <Botao type="submit" className="sm:w-auto">Aplicar</Botao>
           </form>
@@ -211,7 +222,7 @@ export default async function AcompanhamentoPage({
           ) : (
             <>
               <CrescimentoCultos periodo={periodo} de={de} ate={ate} hoje={hoje} fixos={fixos}
-                escopo={ESCOPOS[escopo]} mes={mesEscolhido} />
+                escopo={`${ESCOPOS[escopo]}${total === "detalhado" ? " · detalhada" : ""}`} mes={mesEscolhido} />
               <CrescimentoEventos periodo={periodo} de={de} ate={ate} eventos={eventos} />
             </>
           )}
@@ -228,7 +239,15 @@ type Linha = {
   tipo_evento: string | null;
   situacao: "lancado" | "sem_culto" | "pendente";
   total_simples: number;
+  total_detalhado: number;
 };
+
+const valorDe = (l: Linha, total: Total) => (total === "detalhado" ? l.total_detalhado : l.total_simples);
+
+function mesAnterior(mes: string) {
+  const [a, m] = mes.split("-").map(Number);
+  return m === 1 ? `${a - 1}-12` : `${a}-${String(m - 1).padStart(2, "0")}`;
+}
 
 /**
  * O Supabase devolve no máximo 1000 linhas por consulta. Três anos de cultos
@@ -245,7 +264,7 @@ async function buscarTudo(
   for (let desde = 0; ; desde += pagina) {
     const { data, error } = await supabase
       .from("resumo_por_evento")
-      .select("data, horario, tipo, tipo_evento, situacao, total_simples")
+      .select("data, horario, tipo, tipo_evento, situacao, total_simples, total_detalhado")
       .gte("data", de)
       .lte("data", ate)
       .order("data")

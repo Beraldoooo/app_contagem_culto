@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { TextoCopiavel } from "@/components/texto-copiavel";
 import { Cartao, RotuloCartao, classesRotulo } from "@/components/ui/base";
+import { FiltroData } from "@/components/ui/filtro";
 import {
   mensagemDetalhada,
   mensagemSimples,
@@ -147,16 +148,13 @@ export function CartaoMensagem({
         {Object.entries(outros).map(([k, v]) => (
           <input key={k} type="hidden" name={k} value={v} />
         ))}
-        <label htmlFor="data-mensagem" className="sr-only">
-          Data
-        </label>
-        <input
+        <FiltroData
+          rotulo="Data"
           id="data-mensagem"
           name="data"
-          type="date"
           defaultValue={data}
           max={hoje}
-          className="h-11 min-w-0 flex-1 rounded-campo border border-borda-forte bg-superficie px-3 text-base text-texto"
+          className="flex-1"
         />
         <button
           type="submit"

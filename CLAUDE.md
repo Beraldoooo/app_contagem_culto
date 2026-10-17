@@ -98,6 +98,12 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
       (`app/(protegido)/tendencia-semanal.tsx`). Usa a última semana **fechada e completa** (todos os cultos
       lançados ou "sem culto"); semana fechada só com parte dos cultos fica fora e aparece num aviso — senão
       a frase sairia de um culto só. Toque leva ao Acompanhamento no mês daquela semana.
+      Os gráficos de Domingos/Quintas **voltaram** embaixo da frase, a pedido do Beraldo, com a escolha
+      Simples/Detalhada (`?total=detalhado`); clicar no cartão abre o Acompanhamento daquele dia da semana.
+- [x] Acompanhamento ganhou o filtro **Contagem: Simples/Detalhada** (`?total=`), que vale para cultos e eventos.
+- [x] Caixas de seleção próprias (`components/ui/filtro.tsx`): a lista é desenhada pelo app, no padrão visual,
+      em vez do menu nativo do sistema; a caixa inteira abre a lista. O mês virou lista ("setembro de 2026"),
+      do primeiro mês com culto até hoje. Nas datas, clicar em qualquer ponto da caixa abre o calendário.
 - [ ] Exportação em planilha no Acompanhamento
 - [ ] Remover `contagens.quantidade`, que ficou obsoleta mas foi mantida para o deploy não quebrar
 - [ ] **Importar as planilhas de 2024 e 2025** (ver 0.1). Só depois do modelo certo, e nunca direto em produção.
