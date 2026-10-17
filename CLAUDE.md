@@ -90,7 +90,7 @@ tempo (detalhes nas seções 1–7 abaixo; setup e deploy no `README.md`).
 - [x] **Salvamento conferido de ponta a ponta** (16/10/2026), com a conta de teste promovida a contador por um
       tempo e depois devolvida a visualizador. Em seguida o banco foi zerado (`supabase/zerar-lancamentos.sql`):
       0 eventos e 0 contagens, com usuários, os 16 ministérios e os 5 horários fixos mantidos.
-- [ ] Relatórios: gráfico de homens ao longo do tempo, comparado com a Arena (ministério de homens)
+- [ ] **Acompanhamento** no lugar de Relatórios — plano completo na seção 0.2
 - [ ] Remover `contagens.quantidade`, que ficou obsoleta mas foi mantida para o deploy não quebrar
 - [ ] **Importar as planilhas de 2024 e 2025** (ver 0.1). Só depois do modelo certo, e nunca direto em produção.
 - [ ] **Fase 2**: envio automático do resumo do dia para o grupo de WhatsApp — por último, mas é a prioridade
@@ -203,6 +203,59 @@ depois.
 - Faixas etárias exatas: Pads = 9 a 12; Kids ≈ 5 a 8/9; Berçário e Maternal abaixo disso
 - **Planilhas de 2024 e 2025** — ainda não vistas. São elas que definem se as colunas mudaram ao longo do
   tempo, e o formato do banco tem que caber nelas para os dois anos entrarem inteiros
+
+## 0.2 Acompanhamento e mensagens (decidido em 17/10/2026)
+
+> Substitui a tela "Relatórios". Decisões do Beraldo, discutidas uma a uma.
+
+### Navegação
+- Menu: **Início · Lançar · Histórico · Acompanhamento** (celular: Lançar é o botão redondo do meio; "Mais" guarda
+  Configurações e Usuários). A tela "Relatórios" deixa de existir.
+- **Início**: o último culto e uma frase de tendência ("↑ 6% em relação à semana passada") que leva ao
+  Acompanhamento. Os gráficos de Domingos/Quintas saem do Início.
+- **Acompanhamento** tem duas partes: **Mensagem** (em cima) e **Crescimento** (embaixo).
+
+### Mensagem para o grupo
+- Depois de salvar no Lançar, botão **"Gerar mensagem para o grupo"** → abre o Acompanhamento já com a data e os
+  cultos lançados preenchidos.
+- Escolhe data, cultos e Simples/Detalhada. Os números saem do que foi salvo no lançamento.
+- **Regra geral, sem prender a dia da semana:** se a data tem mais de um culto, aparece a escolha dos cultos; se tem
+  um só (quarta, quinta), aparece só Simples/Detalhada. **Quarta já vem com Detalhada marcada.**
+- A simples continua acumulada quando a pessoa marca vários cultos (hábito do Leonardo — não mudar sem ele pedir).
+
+### Crescimento — regras de cálculo
+- **Semana = segunda a domingo.** Semana que não fechou aparece "em andamento" e não entra na comparação.
+- **Semana com semana:** só cultos fixos (quarta + quinta + domingo), total simples. Compara **cada culto com o
+  mesmo culto da semana anterior, só os que aconteceram nas duas** — se esta semana não teve quarta, a quarta sai das
+  duas. Dividir pelo número de cultos que houve NÃO serve: os cultos têm tamanhos muito diferentes (quarta ~70,
+  domingo 10h ~950) e tirar o culto menor faria a média subir ~20% sem ninguém a mais ter vindo.
+- **Períodos longos (mês, 1–3 anos): "semana típica"** = média de cada culto no mês (soma ÷ vezes que aquele culto
+  aconteceu), somadas. Resolve o mês com 5 domingos e o culto cancelado.
+- Cada culto tem três situações: **lançado** (entra), **não teve culto** (fora, sem alarme), **pendente**
+  (fora, com aviso "falta lançar").
+- **Eventos especiais nunca entram na comparação semanal.** Só mês com mês, separados por **tipo**, cada tipo
+  comparado com o mesmo tipo do mês anterior. Mês sem o evento = aviso "sem evento", nunca zero. Dois do mesmo tipo
+  no mês (não deveria acontecer) = média.
+- Períodos: Semana (cartão com os dois números e a %), Mês (um ponto por semana), 1/2/3 anos (um ponto por mês).
+
+### Gráficos
+- **Linha**, não barras: a pergunta é tendência. Ponto que faltou vira **buraco** na linha, nunca queda a zero;
+  semana em andamento = ponto vazado e tracejado; ponto verde se subiu, vermelho se caiu.
+- Cultos fixos e eventos em gráficos **separados** (escalas muito diferentes).
+
+### Tipos de evento especial
+- Tabela própria, cadastrada uma vez e escolhida ao criar o evento. Primeiros: **Culto Arena** (ministério de
+  homens) e **Culto Belas** (ministério feminino), ambos mensais. Contador e admin podem cadastrar tipo novo.
+- O pedido do pastor (homens nos cultos × Arena) sai daqui, sem nada específico para a Arena.
+
+### Exportação
+- Hoje não existe. Vai para o Acompanhamento, em planilha (abre no Excel), respeitando os filtros da tela.
+
+### Ordem
+1. Banco: tipos de evento + "não teve culto"
+2. Acompanhamento: mensagem (com o botão no Lançar) + crescimento
+3. Frase de tendência no Início, no lugar dos gráficos
+4. Exportação em planilha
 
 ## 1. Visão Geral
 Aplicativo web responsivo (PWA) para registrar, somar e arquivar a contagem de pessoas presentes nos cultos, substituindo o processo atual (contagem enviada manualmente num grupo e perdida com o tempo). O sistema guarda o histórico permanentemente e permite comparar a frequência ao longo do tempo.
