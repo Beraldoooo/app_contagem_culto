@@ -237,12 +237,18 @@ async function Dia({
         </div>
 
         <p className="mt-3 text-xs text-texto-3">
-          {lancados} de {aconteceram}{" "}
-          {aconteceram === 1 ? "horário lançado" : "horários lançados"}
-          {semCulto > 0 ? ` · ${semCulto} sem culto` : ""}
-          {pendentes > 0
-            ? ` · ${pendentes} ${pendentes === 1 ? "pendente" : "pendentes"}`
-            : " · dia completo"}
+          {aconteceram === 0 ? (
+            "Não teve culto neste dia."
+          ) : (
+            <>
+              {lancados} de {aconteceram}{" "}
+              {aconteceram === 1 ? "horário lançado" : "horários lançados"}
+              {semCulto > 0 ? ` · ${semCulto} sem culto` : ""}
+              {pendentes > 0
+                ? ` · ${pendentes} ${pendentes === 1 ? "pendente" : "pendentes"}`
+                : " · dia completo"}
+            </>
+          )}
         </p>
       </Cartao>
 
