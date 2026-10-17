@@ -43,7 +43,7 @@ await db.exec(`
 `);
 
 console.log("\n=== 1. carregar os scripts ===");
-for (const arquivo of ["schema.sql", "contagem-por-categoria.sql"]) {
+for (const arquivo of ["schema.sql", "contagem-por-categoria.sql", "acompanhamento.sql"]) {
   try {
     await db.exec(fs.readFileSync(raiz + arquivo, "utf8"));
     bom(`${arquivo} rodou sem erro`);
@@ -57,6 +57,7 @@ for (const arquivo of ["schema.sql", "contagem-por-categoria.sql"]) {
 console.log("\n=== 2. rodar de novo (idempotência) ===");
 try {
   await db.exec(fs.readFileSync(raiz + "contagem-por-categoria.sql", "utf8"));
+  await db.exec(fs.readFileSync(raiz + "acompanhamento.sql", "utf8"));
   bom("rodar duas vezes não quebra");
 } catch (e) {
   ruim("segunda execução", e.message);
@@ -80,6 +81,7 @@ await db.exec(`
   alter table public.contagens        disable row level security;
   alter table public.contagens_itens  disable row level security;
   alter table public.itens_contagem   disable row level security;
+  alter table public.tipos_evento     disable row level security;
 `);
 
 const CULTOS = {
@@ -200,6 +202,44 @@ const semItens = await db.query(
 if (semItens.rows[0].criancas === null) bom("sem lançar crianças, o campo fica NULL (não 0)");
 else ruim("crianças virou", JSON.stringify(semItens.rows[0].criancas));
 confere("total simples só com adultos", semItens.rows[0].total_simples, 400);
+
+
+console.log("\n=== 8. tipos de evento ===");
+const tipos = await db.query("select nome from public.tipos_evento order by nome");
+confere("tipos cadastrados", tipos.rows.map((r) => r.nome).join(", "), "Culto Arena, Culto Belas");
+await recusa("tipo repetido com outra caixa",
+  "insert into public.tipos_evento (nome) values ('culto arena')");
+await recusa("tipo em culto fixo",
+  `update public.eventos set tipo_evento_id = (select id from public.tipos_evento limit 1)
+    where id = $1`, [ev2.rows[0].id]);
+const arena = await db.query(
+  `insert into public.eventos (tipo, nome, data, horario, tipo_evento_id)
+   select 'evento_especial', 'Arena de agosto', '2026-08-18', '20:00', id
+     from public.tipos_evento where nome = 'Culto Arena' returning id`);
+const tipoArena = await db.query(
+  "select tipo_evento from public.resumo_por_evento where evento_id = $1", [arena.rows[0].id]);
+confere("resumo traz o tipo", tipoArena.rows[0].tipo_evento, "Culto Arena");
+
+console.log("\n=== 9. não teve culto ===");
+const natal = await db.query(
+  `insert into public.eventos (tipo, nome, data, horario)
+   values ('culto_fixo','Culto Quinta 20h','2026-12-24','20:00') returning id`);
+await db.query("update public.eventos set sem_culto = true where id = $1", [natal.rows[0].id]);
+const sit = await db.query(
+  "select situacao, lancado from public.resumo_por_evento where evento_id = $1", [natal.rows[0].id]);
+confere("situação", sit.rows[0].situacao, "sem_culto");
+confere("não conta como lançado", sit.rows[0].lancado, false);
+await recusa("lançar contagem num culto que não houve",
+  "insert into public.contagens (evento_id, adultos) values ($1, 300)", [natal.rows[0].id]);
+await recusa("marcar 'não teve' num culto já lançado",
+  "update public.eventos set sem_culto = true where id = $1", [ev2.rows[0].id]);
+const dia = await db.query(
+  "select horarios, horarios_sem_culto from public.totais_por_data where data = '2026-12-24'");
+confere("dia sem culto não fica devendo", dia.rows[0].horarios, 0);
+confere("e aparece como sem culto", dia.rows[0].horarios_sem_culto, 1);
+const pend = await db.query(
+  "select situacao from public.resumo_por_evento where data = '2026-10-11' and horario = '08:00'");
+confere("culto lançado continua lançado", pend.rows[0].situacao, "lancado");
 
 console.log(`\n${ok} passaram, ${falhou} falharam\n`);
 process.exit(falhou ? 1 : 0);

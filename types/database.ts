@@ -20,6 +20,8 @@ export type EventoTipo = "culto_fixo" | "evento_especial";
 export type ItemGrupo = "fora" | "dentro" | "pastoral";
 /** Em qual linha do resumo o público de um item é somado. */
 export type SomaEm = "criancas" | "pads" | "volts";
+/** lancado: tem contagem · sem_culto: não aconteceu · pendente: falta lançar. */
+export type SituacaoCulto = "lancado" | "sem_culto" | "pendente";
 
 export type Database = {
   public: {
@@ -88,6 +90,8 @@ export type Database = {
           horario: string;
           created_by: string | null;
           created_at: string;
+          tipo_evento_id: string | null;
+          sem_culto: boolean;
         };
         Insert: {
           id?: string;
@@ -97,6 +101,8 @@ export type Database = {
           horario: string;
           created_by?: string | null;
           created_at?: string;
+          tipo_evento_id?: string | null;
+          sem_culto?: boolean;
         };
         Update: {
           id?: string;
@@ -106,6 +112,8 @@ export type Database = {
           horario?: string;
           created_by?: string | null;
           created_at?: string;
+          tipo_evento_id?: string | null;
+          sem_culto?: boolean;
         };
         Relationships: [];
       };
@@ -154,6 +162,28 @@ export type Database = {
             referencedColumns: ["id"];
           },
         ];
+      };
+      tipos_evento: {
+        Row: {
+          id: string;
+          nome: string;
+          ativo: boolean;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          nome: string;
+          ativo?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          nome?: string;
+          ativo?: boolean;
+        };
+        Relationships: [];
       };
       itens_contagem: {
         Row: {
@@ -242,6 +272,10 @@ export type Database = {
           horario: string;
           tipo: EventoTipo;
           nome: string;
+          tipo_evento_id: string | null;
+          /** Nome do tipo (Culto Arena…); null em culto fixo. */
+          tipo_evento: string | null;
+          sem_culto: boolean;
           contagem_id: string | null;
           adultos: number | null;
           homens: number | null;
@@ -256,6 +290,7 @@ export type Database = {
           servindo_dentro: number;
           pastoral: number;
           lancado: boolean;
+          situacao: SituacaoCulto;
           total_simples: number;
           total_detalhado: number;
         };
@@ -268,6 +303,7 @@ export type Database = {
           tem_evento_especial: boolean;
           horarios: number;
           horarios_lancados: number;
+          horarios_sem_culto: number;
           total: number;
           total_detalhado: number;
           horarios_cultos: number;

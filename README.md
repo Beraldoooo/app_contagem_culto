@@ -34,7 +34,9 @@ No painel do Supabase, **SQL Editor → New query**, cole o conteúdo de
 [`supabase/schema.sql`](./supabase/schema.sql) inteiro e clique em **Run**.
 Depois repita com
 [`supabase/contagem-por-categoria.sql`](./supabase/contagem-por-categoria.sql),
-que traz a contagem por categoria e por ministério.
+que traz a contagem por categoria e por ministério, e por fim
+[`supabase/acompanhamento.sql`](./supabase/acompanhamento.sql), com os tipos de
+evento especial e a marcação de "não teve culto".
 
 Isso cria as tabelas, os tipos, os gatilhos, as políticas de segurança (RLS), a
 view de totais e os horários fixos padrão. O script é idempotente: rodar de
